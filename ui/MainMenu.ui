@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>560</width>
+    <height>415</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QLabel#label_title{ 
+	font: 24pt &quot;Old English Text MT&quot;;
+	color:rgb(255, 85, 0);
+}
+
+QPushButton{
+	font: 63 28pt &quot;Bahnschrift SemiBold SemiConden&quot;;
+	background:rgb(255, 85, 0);
+	border: 2px solid gray;
+  	border-radius: 10px;
+ 	padding: 0 8px;
+}
+
+QPushButton:hover{
+	background:rgb(255, 140, 0);
+}
+
+QPushButton:pressed{
+	background: rgb(255, 170, 0);
+}
+
+QLabel{
+	
+	font: 63 16pt &quot;Bahnschrift SemiBold&quot;;
+}	
+</string>
+  </property>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>90</y>
+     <width>536</width>
+     <height>321</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel#label_title, #label_subtitle{ 
+font: 24pt &quot;Old English Text MT&quot;;
+	color:rgb(255, 85, 0);
+}
+
+QPushButton{
+	font: 63 28pt &quot;Bahnschrift SemiBold SemiConden&quot;;
+	background:rgb(255, 85, 0);
+	border: 2px solid gray;
+  	border-radius: 10px;
+ 	padding: 0 8px;
+}
+
+QPushButton:hover{
+	background:rgb(255, 140, 0);
+}
+
+QPushButton:pressed{
+	background: rgb(255, 170, 0);
+}
+
+QLabel{
+	
+	font: 63 16pt &quot;Bahnschrift SemiBold&quot;;
+}	
+</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,8">
+    <item>
+     <widget class="QLabel" name="label_title">
+      <property name="font">
+       <font>
+        <family>Old English Text MT</family>
+        <pointsize>24</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Audivi, scripsi, comperi.</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2">
+      <item>
+       <layout class="QVBoxLayout" name="layout_buttons">
+        <item>
+         <widget class="QPushButton" name="button_listen">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Listen</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_process">
+          <property name="text">
+           <string>Process</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_create">
+          <property name="text">
+           <string>Add New</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="layout_labels">
+        <item>
+         <widget class="QLabel" name="label_listen">
+          <property name="text">
+           <string>Start recording some stuff</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_process">
+          <property name="text">
+           <string>Process an existing event's transcript.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_add">
+          <property name="text">
+           <string>Add new event or speaker.</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QLabel" name="label_icon">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>0</y>
+     <width>100</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>asset/images/Solaire.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
