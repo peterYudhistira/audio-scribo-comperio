@@ -214,12 +214,14 @@ class ProcessWindow(qtw.QWidget):
         self.ui.setupUi(self)
         self.eventList = cursor.list_events()
         self.setWindowTitle("qui habet potentia super machina, comperiat!") # whosoever has power over the machine, let him discover!
+        self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.LoadComboBox(self.ui.combo_eventList)
-        self.LoadTables(self.ui.table_recordData)
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
         self.ui.combo_eventList.currentIndexChanged.connect(self.ChangeEvent)
+        self.ui.button_process.clicked.connect(lambda: self.StartProcessing(15)) # i forgot the existence of lambda ENTIRELY.
+        
 
     def GoBack(self):
         self.hide()
@@ -231,31 +233,46 @@ class ProcessWindow(qtw.QWidget):
             comboBox.addItem(item[1], item[0])
 
     def ChangeEvent(self):
-        pass
+        eventID = self.ui.combo_eventList.currentData()
+        currentEvent = cursor.get_event("id", eventID)
+        self.LoadTables(self.ui.table_recordData, eventID)
+        self.ui.label_theme.setText(str(currentEvent[1]))
+        self.ui.label_date.setText(str(currentEvent[2]))
 
-    def LoadTables(self, table):
-
-        eventID = 11
+    def LoadTables(self, table, eventID):
         # fetch data
         dataList = cursor.get_recordDataJoined("event_id", eventID)
-        
+        # clear table first
+        table.clearContents()
+        table.setRowCount(0)
         # put in table
+        self.button_plays = []
         for i in range(len(dataList)):
             table.insertRow(i)
             table.setItem(i, 0, qtw.QTableWidgetItem(str(dataList[i][0])))
             table.setItem(i, 1, qtw.QTableWidgetItem(str(dataList[i][4])))
             table.setItem(i, 2, qtw.QTableWidgetItem(str(dataList[i][3])))
-            table.setItem(i, 3, qtw.QTableWidgetItem(str(dataList[i][5])))
+            button_play = qtw.QPushButton()
+            button_play.setObjectName("".format(i))
+            button_play.setText(str(i))
+            self.button_plays.append(button_play)
+            self.button_plays[i].clicked.connect(lambda: self.PlayMedia(self.button_plays[i].objectName()))
+            table.setCellWidget(i, 3, self.button_plays[i])
+            table.setItem(i, 3, qtw.QTableWidgetItem(str(dataList[i][5]))) # the audio here
             table.setItem(i, 4, qtw.QTableWidgetItem(str(dataList[i][6])))
         # resize
-        # header = table.horizontalHeader()
-        # header.setSectionResizeMode(
-        #     0, qtw.QHeaderView.ResizeMode.ResizeToContents)
-        # header.setSectionResizeMode(1, qtw.QHeaderView.ResizeMode.Stretch)
-        # header.setSectionResizeMode(
-        #     2, qtw.QHeaderView.ResizeMode.ResizeToContents)
+        table.resizeRowsToContents()
+        table.horizontalHeader().setSectionResizeMode(1, qtw.QHeaderView.ResizeMode.Stretch)
+        table.horizontalHeader().setSectionResizeMode(4, qtw.QHeaderView.ResizeMode.Stretch)
 
+        for i in range(len(self.button_plays)):
+            print(self.button_plays[i].objectName())
+ 
+    def StartProcessing(self, magicNumber):
+        print("Hi, your magic number is {}".format(magicNumber))
 
+    def PlayMedia(self, magicNumber):
+        print("we fartin on this one boys {}".format(magicNumber))
 
 class AddWindow(qtw.QWidget):
     def __init__(self, mainwindow):
