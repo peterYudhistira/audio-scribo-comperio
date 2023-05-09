@@ -13,9 +13,9 @@ class TurnToTextinator():
         self.translator = gt.Translator()
 
     def TranslateText(self, text, src="auto", dest="en"):
-        return self.translator.translate(text, src=src, dest=dest)
+        return self.translator.translate(text, src=src, dest=dest).text
 
-    def TranscribeText(self, fileName, transcribeLang="Indonesian"):
+    def TranscribeText(self, fileName, transcribeLang="id"):
         filenamePath = pathlib.Path(fileName)
         # go to the voice clip's directory
         filePath = os.path.join(os.getcwd(), os.path.join(filenamePath.parts[0], filenamePath.parts[1]))
@@ -26,6 +26,9 @@ class TurnToTextinator():
         os.chdir(two_up)
         return result["text"]
     
+    def TwoForOneSpecial(self, fileName, transcribeLang="id", translateLang="en"):
+        text = self.TranscribeText(fileName, transcribeLang)
+        return self.TranslateText(text, transcribeLang, translateLang)
 
 # ttt = TurnToTextinator()
 # text = ttt.TranscribeText("records\event17\BH09052023214407.wav", transcribeLang="English")

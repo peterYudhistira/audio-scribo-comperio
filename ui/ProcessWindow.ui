@@ -39,6 +39,10 @@ QPushButton:pressed{
 	background: rgb(255, 170, 0);
 }
 
+QPushButton:disabled{
+	background: rgb(150, 150, 150);
+}
+
 QLabel{
 	font: 63 16pt &quot;Bahnschrift SemiBold&quot;;
 }	

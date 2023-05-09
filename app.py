@@ -262,6 +262,9 @@ class ProcessWindow(qtw.QWidget):
             # for some reason, we need to specify two things in the lambda. first one probably goes to the signal slot.
             self.button_play.clicked.connect(
                 lambda ch, filePath=dataList[i][5]: self.TogglePlayRecord(filePath))
+            if dataList[i][5] == "":
+                self.button_play.setDisabled(True)
+                self.button_play.setText("🙅")
             table.setCellWidget(i, 3, self.button_play)
             table.setItem(i, 4, qtw.QTableWidgetItem(
                 str(dataList[i][6])))  # text
