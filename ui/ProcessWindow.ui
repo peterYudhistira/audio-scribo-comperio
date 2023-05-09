@@ -47,7 +47,10 @@ QLabel{
 	
 	font: 63 12pt &quot;Bahnschrift SemiBold&quot;;
 }
-</string>
+
+QCheckBox{
+	font: 63 12pt &quot;Bahnschrift SemiBold&quot;;
+}</string>
   </property>
   <widget class="QPushButton" name="button_back">
    <property name="geometry">
@@ -171,30 +174,69 @@ QLabel{
     <string>Date Here</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="button_transcribe">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>340</y>
-     <width>181</width>
-     <height>61</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Transcribe</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="button_process">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>320</x>
      <y>340</y>
-     <width>181</width>
+     <width>161</width>
      <height>61</height>
     </rect>
    </property>
    <property name="text">
     <string>Process</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line_3">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>230</y>
+     <width>16</width>
+     <height>171</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="check_transcribe">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>240</y>
+     <width>261</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Transcribe First</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="check_transcribe_2">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>270</y>
+     <width>261</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Show Clustering as Graph</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="check_transcribe_3">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>300</y>
+     <width>261</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Nerd Mode🤓</string>
    </property>
   </widget>
  </widget>

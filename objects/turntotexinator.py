@@ -22,8 +22,12 @@ class TurnToTextinator():
         os.chdir(filePath)
         result = self.whisperModel.transcribe(filenamePath.parts[-1], fp16=False, language=transcribeLang)
         # go back to the Program's root directory.
-        os.chdir()
+        two_up = pathlib.Path(__file__).resolve().parents[1]
+        os.chdir(two_up)
         return result["text"]
     
-    
 
+# ttt = TurnToTextinator()
+# text = ttt.TranscribeText("records\event17\BH09052023214407.wav", transcribeLang="English")
+# tlText = ttt.TranslateText(text, "en", "id")
+# print(tlText)

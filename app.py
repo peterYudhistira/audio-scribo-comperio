@@ -208,6 +208,10 @@ class ProcessWindow(qtw.QWidget):
         self.ui = pw.Ui_Form()
         self.ui.setupUi(self)
         self.eventList = cursor.list_events()
+        self.audioPlayer = qtm.QMediaPlayer()
+        self.audioOutput = qtm.QAudioOutput()
+        self.audioPlayer.setAudioOutput(self.audioOutput)
+        self.audioOutput.setVolume(100)
         # whosoever has power over the machine, let him discover!
         self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
@@ -253,9 +257,11 @@ class ProcessWindow(qtw.QWidget):
                 str(dataList[i][3])))  # speaker
 
             # for audio transcript, each row has a button which plays the recording if it is clicked.
-            self.button_play = qtw.QPushButton("Play {}".format(i), self)
+            self.button_play = qtw.QPushButton("▶".format(i), self)
+            self.button_play.setCheckable(True)
             # for some reason, we need to specify two things in the lambda. first one probably goes to the signal slot.
-            self.button_play.clicked.connect(lambda ch, i=dataList[i][5]: self.PlayMedia(i))
+            self.button_play.clicked.connect(
+                lambda ch, filePath=dataList[i][5]: self.TogglePlayRecord(filePath))
             table.setCellWidget(i, 3, self.button_play)
             table.setItem(i, 4, qtw.QTableWidgetItem(
                 str(dataList[i][6])))  # text
@@ -269,8 +275,15 @@ class ProcessWindow(qtw.QWidget):
     def StartProcessing(self, magicNumber):
         print("Hi, your magic number is {}".format(magicNumber))
 
-    def PlayMedia(self, i):
-        print("we fartin on this one boys {}".format(i))
+    def TogglePlayRecord(self, filePath):
+        sender = self.sender()
+        if sender.isChecked():
+            self.audioPlayer.setSource(qtc.QUrl.fromLocalFile(filePath))
+            self.audioPlayer.play()
+            sender.setText("■")
+        else:
+            self.audioPlayer.stop()
+            sender.setText("▶")
 
 
 class AddWindow(qtw.QWidget):

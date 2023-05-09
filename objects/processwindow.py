@@ -46,7 +46,10 @@ class Ui_Form(object):
 "    \n"
 "    font: 63 12pt \"Bahnschrift SemiBold\";\n"
 "}\n"
-"")
+"\n"
+"QCheckBox{\n"
+"    font: 63 12pt \"Bahnschrift SemiBold\";\n"
+"}")
         self.button_back = QtWidgets.QPushButton(parent=Form)
         self.button_back.setGeometry(QtCore.QRect(40, 20, 101, 51))
         self.button_back.setObjectName("button_back")
@@ -93,12 +96,23 @@ class Ui_Form(object):
         self.label_date = QtWidgets.QLabel(parent=Form)
         self.label_date.setGeometry(QtCore.QRect(40, 200, 441, 21))
         self.label_date.setObjectName("label_date")
-        self.button_transcribe = QtWidgets.QPushButton(parent=Form)
-        self.button_transcribe.setGeometry(QtCore.QRect(40, 340, 181, 61))
-        self.button_transcribe.setObjectName("button_transcribe")
         self.button_process = QtWidgets.QPushButton(parent=Form)
-        self.button_process.setGeometry(QtCore.QRect(300, 340, 181, 61))
+        self.button_process.setGeometry(QtCore.QRect(320, 340, 161, 61))
         self.button_process.setObjectName("button_process")
+        self.line_3 = QtWidgets.QFrame(parent=Form)
+        self.line_3.setGeometry(QtCore.QRect(300, 230, 16, 171))
+        self.line_3.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        self.line_3.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.line_3.setObjectName("line_3")
+        self.check_transcribe = QtWidgets.QCheckBox(parent=Form)
+        self.check_transcribe.setGeometry(QtCore.QRect(40, 240, 261, 21))
+        self.check_transcribe.setObjectName("check_transcribe")
+        self.check_transcribe_2 = QtWidgets.QCheckBox(parent=Form)
+        self.check_transcribe_2.setGeometry(QtCore.QRect(40, 270, 261, 21))
+        self.check_transcribe_2.setObjectName("check_transcribe_2")
+        self.check_transcribe_3 = QtWidgets.QCheckBox(parent=Form)
+        self.check_transcribe_3.setGeometry(QtCore.QRect(40, 300, 261, 21))
+        self.check_transcribe_3.setObjectName("check_transcribe_3")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -120,8 +134,10 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Text Transcript"))
         self.label_theme.setText(_translate("Form", "Theme Here"))
         self.label_date.setText(_translate("Form", "Date Here"))
-        self.button_transcribe.setText(_translate("Form", "Transcribe"))
         self.button_process.setText(_translate("Form", "Process"))
+        self.check_transcribe.setText(_translate("Form", "Transcribe First"))
+        self.check_transcribe_2.setText(_translate("Form", "Show Clustering as Graph"))
+        self.check_transcribe_3.setText(_translate("Form", "Nerd Mode🤓"))
 
 
 if __name__ == "__main__":
