@@ -93,12 +93,12 @@ class Ui_Form(object):
         self.label_date = QtWidgets.QLabel(parent=Form)
         self.label_date.setGeometry(QtCore.QRect(40, 200, 441, 21))
         self.label_date.setObjectName("label_date")
-        self.pushButton = QtWidgets.QPushButton(parent=Form)
-        self.pushButton.setGeometry(QtCore.QRect(40, 270, 181, 61))
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(parent=Form)
-        self.pushButton_2.setGeometry(QtCore.QRect(300, 270, 181, 61))
-        self.pushButton_2.setObjectName("pushButton_2")
+        self.button_transcribe = QtWidgets.QPushButton(parent=Form)
+        self.button_transcribe.setGeometry(QtCore.QRect(40, 340, 181, 61))
+        self.button_transcribe.setObjectName("button_transcribe")
+        self.button_process = QtWidgets.QPushButton(parent=Form)
+        self.button_process.setGeometry(QtCore.QRect(300, 340, 181, 61))
+        self.button_process.setObjectName("button_process")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -120,8 +120,8 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Text Transcript"))
         self.label_theme.setText(_translate("Form", "Theme Here"))
         self.label_date.setText(_translate("Form", "Date Here"))
-        self.pushButton.setText(_translate("Form", "PushButton"))
-        self.pushButton_2.setText(_translate("Form", "PushButton"))
+        self.button_transcribe.setText(_translate("Form", "Transcribe"))
+        self.button_process.setText(_translate("Form", "Process"))
 
 
 if __name__ == "__main__":

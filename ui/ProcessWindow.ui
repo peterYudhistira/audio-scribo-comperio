@@ -171,30 +171,30 @@ QLabel{
     <string>Date Here</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="button_transcribe">
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>270</y>
+     <y>340</y>
      <width>181</width>
      <height>61</height>
     </rect>
    </property>
    <property name="text">
-    <string>PushButton</string>
+    <string>Transcribe</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="button_process">
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>270</y>
+     <y>340</y>
      <width>181</width>
      <height>61</height>
     </rect>
    </property>
    <property name="text">
-    <string>PushButton</string>
+    <string>Process</string>
    </property>
   </widget>
  </widget>

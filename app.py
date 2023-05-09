@@ -5,7 +5,6 @@ from objects import (
     listenwindow as lw,
     processwindow as pw,
     addwindow as aw,
-    recorder as rc,
     db
 )
 from PyQt6 import (
@@ -251,9 +250,9 @@ class ProcessWindow(qtw.QWidget):
             table.insertRow(i)
             table.setItem(i, 0, qtw.QTableWidgetItem(str(dataList[i][0])))
             table.setItem(i, 1, qtw.QTableWidgetItem(str(dataList[i][4])))
-            table.setItem(i, 2, qtw.QTableWidgetItem(str(dataList[i][3])))
+            table.setItem(i, 2, qtw.QTableWidgetItem(str(dataList[i][3])))  
             button_play = qtw.QPushButton()
-            button_play.setObjectName("".format(i))
+            button_play.setObjectName("".format(i))   
             button_play.setText(str(i))
             self.button_plays.append(button_play)
             self.button_plays[i].clicked.connect(lambda: self.PlayMedia(self.button_plays[i].objectName()))
@@ -271,7 +270,7 @@ class ProcessWindow(qtw.QWidget):
     def StartProcessing(self, magicNumber):
         print("Hi, your magic number is {}".format(magicNumber))
 
-    def PlayMedia(self, magicNumber):
+    def PlayMedia(self, magicNumber):  
         print("we fartin on this one boys {}".format(magicNumber))
 
 class AddWindow(qtw.QWidget):
@@ -378,7 +377,6 @@ class AddWindow(qtw.QWidget):
 
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
-    recorder = rc.AudioRecorder()
     app = qtw.QApplication([])
     menu_widget = MainMenuWindow()
     menu_widget.show()
