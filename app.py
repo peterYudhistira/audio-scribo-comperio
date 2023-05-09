@@ -1,10 +1,10 @@
-import typing
 from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
     listenwindow as lw,
     processwindow as pw,
     addwindow as aw,
+    turntotexinator as ttt,
     db
 )
 from PyQt6 import (
@@ -30,7 +30,6 @@ class RecorderThread(qtc.QThread):
 
     # this function will be called when QThread::start() is called.
     def run(self):
-        print("recording in progress...")
         audio = pa.PyAudio()
         frames = []
         stream = audio.open(format=pa.paInt16, channels=1,
@@ -47,14 +46,10 @@ class RecorderThread(qtc.QThread):
         wf.writeframes(b''.join(frames))
         wf.close()
 
-        print("say goodnight, prince.")
-
     # this here is what to do upon stopping
-
     def stop(self):
         self.is_running = False
         self.toggle_signal.emit(self.fileName)
-        print("recording stopped.")
 
 
 class MainMenuWindow(qtw.QWidget):
@@ -66,7 +61,8 @@ class MainMenuWindow(qtw.QWidget):
         self.setWindowTitle(
             "I hear, I write, I discover")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
-        self.ui.label_title.setText("Audio, Scribo, Comperio") # thanks to Rueful on Discord for grammatical correction.
+        # thanks to Rueful on Discord for grammatical correction.
+        self.ui.label_title.setText("Audio, Scribo, Comperio")
         # self.ui.label_icon.setPixmap(qtg.QPixmap("asset/images/Solaire.png"))
 
         # connect stuff here
@@ -100,7 +96,8 @@ class ListenWindow(qtw.QWidget):
         # set stuff here
         self.ui = lw.Ui_Form()
         self.ui.setupUi(self)
-        self.setWindowTitle("qui habet aurem audendi, audiat!") # whosoever has ears for hearing, let him hear!
+        # whosoever has ears for hearing, let him hear!
+        self.setWindowTitle("qui habet aurem audendi, audiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.eventID = 0
         self.speakerID = 0
@@ -152,7 +149,6 @@ class ListenWindow(qtw.QWidget):
             self.ui.button_record.setChecked(False)
 
     def SaveRecording(self, fileName):
-        print("Yer file is saved in {}".format(fileName))
         cursor.create_record_audio(self.ui.combo_eventList.currentData(
         ), self.ui.combo_speakerList.currentData(), self.ui.text_question.toPlainText(), fileName)
 
@@ -212,20 +208,22 @@ class ProcessWindow(qtw.QWidget):
         self.ui = pw.Ui_Form()
         self.ui.setupUi(self)
         self.eventList = cursor.list_events()
-        self.setWindowTitle("qui habet potentia super machina, comperiat!") # whosoever has power over the machine, let him discover!
+        # whosoever has power over the machine, let him discover!
+        self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.LoadComboBox(self.ui.combo_eventList)
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
         self.ui.combo_eventList.currentIndexChanged.connect(self.ChangeEvent)
-        self.ui.button_process.clicked.connect(lambda: self.StartProcessing(15)) # i forgot the existence of lambda ENTIRELY.
-        
+        # i forgot the existence of lambda ENTIRELY.
+        self.ui.button_process.clicked.connect(
+            lambda: self.StartProcessing(15))
 
     def GoBack(self):
         self.hide()
         self.mainwindow.show()
-    
+
     def LoadComboBox(self, comboBox):
         comboBox.setPlaceholderText("Select Event")
         for item in self.eventList:
@@ -245,33 +243,35 @@ class ProcessWindow(qtw.QWidget):
         table.clearContents()
         table.setRowCount(0)
         # put in table
-        self.button_plays = []
         for i in range(len(dataList)):
             table.insertRow(i)
-            table.setItem(i, 0, qtw.QTableWidgetItem(str(dataList[i][0])))
-            table.setItem(i, 1, qtw.QTableWidgetItem(str(dataList[i][4])))
-            table.setItem(i, 2, qtw.QTableWidgetItem(str(dataList[i][3])))  
-            button_play = qtw.QPushButton()
-            button_play.setObjectName("".format(i))   
-            button_play.setText(str(i))
-            self.button_plays.append(button_play)
-            self.button_plays[i].clicked.connect(lambda: self.PlayMedia(self.button_plays[i].objectName()))
-            table.setCellWidget(i, 3, self.button_plays[i])
-            table.setItem(i, 3, qtw.QTableWidgetItem(str(dataList[i][5]))) # the audio here
-            table.setItem(i, 4, qtw.QTableWidgetItem(str(dataList[i][6])))
+            table.setItem(i, 0, qtw.QTableWidgetItem(
+                str(dataList[i][0])))  # id
+            table.setItem(i, 1, qtw.QTableWidgetItem(
+                str(dataList[i][4])))  # question
+            table.setItem(i, 2, qtw.QTableWidgetItem(
+                str(dataList[i][3])))  # speaker
+
+            # for audio transcript, each row has a button which plays the recording if it is clicked.
+            self.button_play = qtw.QPushButton("Play {}".format(i), self)
+            # for some reason, we need to specify two things in the lambda. first one probably goes to the signal slot.
+            self.button_play.clicked.connect(lambda ch, i=dataList[i][5]: self.PlayMedia(i))
+            table.setCellWidget(i, 3, self.button_play)
+            table.setItem(i, 4, qtw.QTableWidgetItem(
+                str(dataList[i][6])))  # text
         # resize
         table.resizeRowsToContents()
-        table.horizontalHeader().setSectionResizeMode(1, qtw.QHeaderView.ResizeMode.Stretch)
-        table.horizontalHeader().setSectionResizeMode(4, qtw.QHeaderView.ResizeMode.Stretch)
+        table.horizontalHeader().setSectionResizeMode(
+            1, qtw.QHeaderView.ResizeMode.Stretch)
+        table.horizontalHeader().setSectionResizeMode(
+            4, qtw.QHeaderView.ResizeMode.Stretch)
 
-        for i in range(len(self.button_plays)):
-            print(self.button_plays[i].objectName())
- 
     def StartProcessing(self, magicNumber):
         print("Hi, your magic number is {}".format(magicNumber))
 
-    def PlayMedia(self, magicNumber):  
-        print("we fartin on this one boys {}".format(magicNumber))
+    def PlayMedia(self, i):
+        print("we fartin on this one boys {}".format(i))
+
 
 class AddWindow(qtw.QWidget):
     def __init__(self, mainwindow):
@@ -283,7 +283,8 @@ class AddWindow(qtw.QWidget):
         # set stuff
         self.ui = aw.Ui_Form()
         self.ui.setupUi(self)
-        self.setWindowTitle("qui habet manus scribendum, scribat!") # whosoever has hands with which to write, let him write!
+        # whosoever has hands with which to write, let him write!
+        self.setWindowTitle("qui habet manus scribendum, scribat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.LoadTables(self.ui.table_speakers)
         self.LoadTables(self.ui.table_events)
