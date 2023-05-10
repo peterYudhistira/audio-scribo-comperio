@@ -26,7 +26,7 @@ class AnomalyDetector():
     def __init__(self, df: pd.DataFrame) -> None:
         # turn into df and not excel dataset, like it.
         self.df = df
-        self.model = api.load('word2vec-google-news-300')
+        self.model = api.load('word2vec-google-news-300') # might be better if i can save the file as bin then load it every time instead of downloading. 
         # print(self.df.head())
     # this function returns a list of tokens, cleaned and preprocessed.
 

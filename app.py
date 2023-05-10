@@ -21,31 +21,28 @@ import wave
 import pyaudio as pa
 
 
-class TurnToTextinatorThread(qtc.QThread):
-    transcribe_signal = qtc.pyqtSignal(int, str)
+class TurnToTextinatorThread(qtc.QThread):  # tttt for short
+    transcribe_signal = qtc.pyqtSignal(list)
 
-    def __init__(self, filePath="") -> None:
+    # takes a list of (row, filePath)
+    def __init__(self, filePathList: list = []) -> None:
         super().__init__()
-        self.count = 0
-        self.filePath = filePath
-        self.row = 0
-        self.col = 0
+        self.filePathList = filePathList
 
-    def setFilePath(self, row: int, filePath: str):
-        self.row = row
-        self.filePath = filePath
+    def setFilePath(self, filePathList: list):
+        self.filePathList = filePathList
 
     def run(self):
-        self.text = ttt.TwoForOneSpecial(
-            fileName=self.filePath, transcribeLang="id", translateLang="en")
-        print("if my intuition is right we truly finished")
-        self.transcribe_signal.emit(self.row, self.text)
-        print(self.text)
-
-    def stop(self):
-        print("we finished")
-        # return the string here.
-        
+        filePath_transcriptList = []
+        print("huh?")
+        for row in range(len(self.filePathList)):
+            transcript = ttt.TwoForOneSpecial(
+                fileName=self.filePathList[row][1], transcribeLang="id", translateLang="en")
+            filePath_transcriptList.append(
+                (self.filePathList[row][0], self.filePathList[row][1], transcript))
+        print("hoh?")
+        # returns a list of (row, filePath, transcript)
+        self.transcribe_signal.emit(filePath_transcriptList)
 
 
 class RecorderThread(qtc.QThread):
@@ -241,9 +238,6 @@ class ProcessWindow(qtw.QWidget):
         self.audioOutput = qtm.QAudioOutput()
         self.audioPlayer.setAudioOutput(self.audioOutput)
         self.audioOutput.setVolume(100)
-        self.ui.tttt = TurnToTextinatorThread()
-        self.ui.tttt.transcribe_signal.connect(self.GetTranscript)
-
         # whosoever has power over the machine, let him discover!
         self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
@@ -310,22 +304,27 @@ class ProcessWindow(qtw.QWidget):
             4, qtw.QHeaderView.ResizeMode.Stretch)
 
     def StartProcessing(self, magicNumber):
-        self.ui.table_recordData.setItem(3,4, qtw.QTableWidgetItem(str("yoohoo")))
+        self.ui.table_recordData.setItem(
+            3, 4, qtw.QTableWidgetItem(str("yoohoo")))
 
     def TranscribeAll(self):
+        ttttt = []  # i am funny
         for row in range(self.ui.table_recordData.rowCount()):
             button = self.ui.table_recordData.cellWidget(row, 3)
             if button.objectName() != "":
-                print("ay pierre you wanna come out here? ({})".format(
-                    button.objectName()))
-                self.ui.tttt.setFilePath(row, button.objectName())
-                self.ui.tttt.start()
+                # i'm about to get even funnier
+                ttttt.append((row, button.objectName()))
+        print("the list contains : {}".format(ttttt))
+        self.tttt = TurnToTextinatorThread()
+        self.tttt.setFilePath(ttttt)
+        self.tttt.transcribe_signal.connect(self.GetTranscript)
+        self.tttt.start()
 
-    def GetTranscript(self, row: int, transcriptResult: str):
-        print("getTranscript row : {}".format(row))
-        print("getTranscript text : {}".format(transcriptResult))
-        self.ui.table_recordData.setItem(row, 4, qtw.QTableWidgetItem(
-            transcriptResult))
+    def GetTranscript(self, transcriptResult: list):
+        print("im here?")
+        for row in range(len(transcriptResult)):
+            self.ui.table_recordData.setItem(
+                transcriptResult[row][0], 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
         self.ui.table_recordData.resizeRowsToContents()
 
     def TogglePlayRecord(self, filePath):
@@ -445,7 +444,7 @@ class AddWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    ttt = ttt.TurnToTextinator()
+    ttt = ttt.TurnToTextinator()  # you think i'm funny?
     menu_widget = MainMenuWindow()
     menu_widget.show()
     app.exec()
