@@ -243,6 +243,22 @@ QCheckBox{
     <string>Nerd Mode🤓</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="button_transcribe_all">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>230</y>
+     <width>161</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 63 16pt &quot;Bahnschrift SemiBold&quot;;</string>
+   </property>
+   <property name="text">
+    <string>Transcribe All</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -1,5 +1,3 @@
-import typing
-from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
@@ -20,22 +18,6 @@ from datetime import datetime as dt
 import wave
 import pyaudio as pa
 
-
-class TurnToTextinatorThread(qtc.QThread):
-    transcribe_signal = qtc.pyqtSignal()
-
-    def __init__(self, filePath) -> None:
-        super().__init__()
-        self.count = 0
-        self.filePath = filePath
-
-    def run(self):
-        text = ttt.TwoForOneSpecial(fileName=self.filePath, transcribeLang="id", translateLang="en")
-        print("if my intuition is right we truly finished")
-        print(text)
-
-    def stop(self):
-        print("we finished")
 
 class RecorderThread(qtc.QThread):
 
@@ -241,7 +223,6 @@ class ProcessWindow(qtw.QWidget):
         # i forgot the existence of lambda ENTIRELY.
         self.ui.button_process.clicked.connect(
             lambda: self.StartProcessing(15))
-        self.ui.button_transcribe_all.clicked.connect(self.TranscribeAll)
 
     def GoBack(self):
         self.hide()
@@ -275,17 +256,16 @@ class ProcessWindow(qtw.QWidget):
             table.setItem(i, 2, qtw.QTableWidgetItem(
                 str(dataList[i][3])))  # speaker
 
-            # make audio button. if audio path doesn't exist, disable it.
+            # for audio transcript, each row has a button which plays the recording if it is clicked.
             self.button_play = qtw.QPushButton("▶".format(i), self)
-            self.button_play.setObjectName(str(dataList[i][5]))
             self.button_play.setCheckable(True)
+            # for some reason, we need to specify two things in the lambda. first one probably goes to the signal slot.
             self.button_play.clicked.connect(
-                lambda ch, filePath=self.button_play.objectName(): self.TogglePlayRecord(filePath))
+                lambda ch, filePath=dataList[i][5]: self.TogglePlayRecord(filePath))
             if dataList[i][5] == "":
                 self.button_play.setDisabled(True)
                 self.button_play.setText("🙅")
             table.setCellWidget(i, 3, self.button_play)
-
             table.setItem(i, 4, qtw.QTableWidgetItem(
                 str(dataList[i][6])))  # text
         # resize
@@ -297,16 +277,6 @@ class ProcessWindow(qtw.QWidget):
 
     def StartProcessing(self, magicNumber):
         print("Hi, your magic number is {}".format(magicNumber))
-
-    def TranscribeAll(self):
-        for row in range(self.ui.table_recordData.rowCount()):
-            button = self.ui.table_recordData.cellWidget(row, 3)
-            if button.objectName() != "":
-                print("ay pierre you wanna come out here? ({})".format(
-                    button.objectName()))
-                self.ui.tttt = TurnToTextinatorThread(button.objectName())
-                self.ui.tttt.start()
-
 
     def TogglePlayRecord(self, filePath):
         sender = self.sender()
@@ -425,7 +395,6 @@ class AddWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    ttt = ttt.TurnToTextinator()
     menu_widget = MainMenuWindow()
     menu_widget.show()
     app.exec()

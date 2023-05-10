@@ -117,6 +117,10 @@ class Ui_Form(object):
         self.check_transcribe_3 = QtWidgets.QCheckBox(parent=Form)
         self.check_transcribe_3.setGeometry(QtCore.QRect(40, 300, 261, 21))
         self.check_transcribe_3.setObjectName("check_transcribe_3")
+        self.button_transcribe_all = QtWidgets.QPushButton(parent=Form)
+        self.button_transcribe_all.setGeometry(QtCore.QRect(320, 230, 161, 61))
+        self.button_transcribe_all.setStyleSheet("font: 63 16pt \"Bahnschrift SemiBold\";")
+        self.button_transcribe_all.setObjectName("button_transcribe_all")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -142,6 +146,7 @@ class Ui_Form(object):
         self.check_transcribe.setText(_translate("Form", "Transcribe First"))
         self.check_transcribe_2.setText(_translate("Form", "Show Clustering as Graph"))
         self.check_transcribe_3.setText(_translate("Form", "Nerd Mode🤓"))
+        self.button_transcribe_all.setText(_translate("Form", "Transcribe All"))
 
 
 if __name__ == "__main__":
