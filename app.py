@@ -22,20 +22,24 @@ import pyaudio as pa
 
 
 class TurnToTextinatorThread(qtc.QThread):
-    transcribe_signal = qtc.pyqtSignal()
+    transcribe_signal = qtc.pyqtSignal(str)
 
-    def __init__(self, filePath) -> None:
+    def __init__(self, filePath="") -> None:
         super().__init__()
         self.count = 0
         self.filePath = filePath
 
+    def setFilePath(self, filePath):
+        self.filePath = filePath
+    
     def run(self):
-        text = ttt.TwoForOneSpecial(fileName=self.filePath, transcribeLang="id", translateLang="en")
+        selftext = ttt.TwoForOneSpecial(fileName=self.filePath, transcribeLang="id", translateLang="en")
         print("if my intuition is right we truly finished")
-        print(text)
+        print(self.text)
 
     def stop(self):
         print("we finished")
+        self.transcribe_signal.emit() # return the string here.
 
 class RecorderThread(qtc.QThread):
 
@@ -230,6 +234,8 @@ class ProcessWindow(qtw.QWidget):
         self.audioOutput = qtm.QAudioOutput()
         self.audioPlayer.setAudioOutput(self.audioOutput)
         self.audioOutput.setVolume(100)
+        self.ui.tttt = TurnToTextinatorThread()
+
         # whosoever has power over the machine, let him discover!
         self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
@@ -304,10 +310,10 @@ class ProcessWindow(qtw.QWidget):
             if button.objectName() != "":
                 print("ay pierre you wanna come out here? ({})".format(
                     button.objectName()))
-                self.ui.tttt = TurnToTextinatorThread(button.objectName())
+                self.ui.tttt.setFilePath(button.objectName())
                 self.ui.tttt.start()
 
-
+    
     def TogglePlayRecord(self, filePath):
         sender = self.sender()
         if sender.isChecked():
