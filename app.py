@@ -24,7 +24,6 @@ import pyaudio as pa
 class TurnToTextinatorThread(qtc.QThread):  # tttt for short
     transcribe_signal = qtc.pyqtSignal(list)
 
-    # takes a list of (row, filePath)
     def __init__(self, filePathList: list = []) -> None:
         super().__init__()
         self.filePathList = filePathList

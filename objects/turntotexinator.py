@@ -1,7 +1,6 @@
 import whisper
-import googletrans as gt
-import pathlib
 import os
+import googletrans as gt
 
 # behold the most critical non-core component: the Turn-to-textinator
 # it transcribes an audio file and translates to English if it isn't already.
@@ -16,14 +15,8 @@ class TurnToTextinator():
         return self.translator.translate(text, src=src, dest=dest).text
 
     def TranscribeText(self, fileName, transcribeLang="id"):
-        filenamePath = pathlib.Path(fileName)
-        # go to the voice clip's directory
-        filePath = os.path.join(os.getcwd(), os.path.join(filenamePath.parts[0], filenamePath.parts[1]))
-        os.chdir(filePath)
-        result = self.whisperModel.transcribe(filenamePath.parts[-1], fp16=False, language=transcribeLang)
-        # go back to the Program's root directory.
-        two_up = pathlib.Path(__file__).resolve().parents[1]
-        os.chdir(two_up)
+        filenamePath = os.path.join(os.getcwd(), fileName)
+        result = self.whisperModel.transcribe(filenamePath, fp16=False, language=transcribeLang)
         return result["text"]
     
     def TwoForOneSpecial(self, fileName, transcribeLang="id", translateLang="en"):
@@ -32,7 +25,10 @@ class TurnToTextinator():
     
     def SaySomething(self):
         print("a platypus? PERRY THE PLATYPUS???")
+        
 # ttt = TurnToTextinator()
-# text = ttt.TranscribeText("records\event17\BH09052023214407.wav", transcribeLang="English")
-# tlText = ttt.TranslateText(text, "en", "id")
+# text = ttt.TranscribeText("records\event18\YOT11052023020940.wav", transcribeLang="Indonesian")
+# tlText = ttt.TranslateText(text, "id", "en")
+# print(text)
+# print("-" * 80)
 # print(tlText)
