@@ -1,0 +1,15 @@
+contractions==0.1.73
+gensim==4.3.0
+googletrans==3.1.0a0
+inflect==6.0.2
+matplotlib==3.6.3
+nltk==3.8.1
+noisereduce==2.0.1
+numpy==1.24.1
+openai_whisper==20230314
+pandas==1.5.3
+PyAudio==0.2.13
+PyQt6==6.5.0
+PyQt6_sip==13.5.1
+scikit_learn==1.2.1
+scipy==1.10.1
