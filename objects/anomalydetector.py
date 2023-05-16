@@ -1,54 +1,114 @@
+# imports go here
 import numpy as np
+import db
 import pandas as pd
-import matplotlib.pyplot as plt
-import nltk
-import re
+import inflect
 import string
-import math
+import nltk
+import gensim
+import contractions
+import matplotlib.pyplot as plt
 import gensim.downloader as api
-import sklearn
+from gensim import corpora, models
+from nltk.test.gensim_fixt import setup_module
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
-import inflect
-import contractions
 from sklearn.feature_extraction.text import TfidfVectorizer
-import db
-import gensim
-from gensim import corpora, models
-from sklearn.manifold import TSNE
 from sklearn.cluster import DBSCAN
+from sklearn.manifold import TSNE
 
 # this is where everything we've experimented on will be implemented.
 
 
 class AnomalyDetector():
-    def __init__(self, df: pd.DataFrame) -> None:
-        # turn into df and not excel dataset, like it.
-        self.df = df
-        self.model = api.load('word2vec-google-news-300') # might be better if i can save the file as bin then load it every time instead of downloading. 
-        # print(self.df.head())
-    # this function returns a list of tokens, cleaned and preprocessed.
+    def __init__(self, dbName: str = "",  dh=None, model=None) -> None:
+        if dh is None:
+            self.dh = db.DatabaseHandler(dbName=dbName)
+        else:
+            self.dh = dh
+        if model is None:
+            self.model = api.load("glove-wiki-gigaword-300")
+        else:
+            self.model = model
+    # def __init__(self, eventID: int, isSplit: bool) -> None:
+    #     self.dh = db.DatabaseHandler("test.db")
+    #     self.df = self.GetDF(self.dh, "eventID", eventID, isSplit)
+    #     self.model = api.load("glove-wiki-gigaword-300")
+    #     pass
 
-    def preprocess_document(self, corpus, isLemma=False, isStopwords=False, isInflect=False, isNumberFiltered=True):
+    '''
+    inputs :
+    - dh : DatabaseHandler --> to retrieve data from database
+    - eventID : int --> we're doing this by event, so straight to the eventID
+    - selector : str --> pretty much formality.
+    - splitBySentences : bool --> Split each doc into sentences or not. Defaults to no.
+    '''
+    '''
+    outputs:
+    None, just setting
+    '''
 
-        inflector = inflect.engine()  # prepare inflector
-        stop_words = set(stopwords.words("english"))
+    def SetDF(self, dh: db.DatabaseHandler, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
+        self.df = self.dh.get_recordDataJoinedDF(selector=selector, ID=eventID)
+        if splitBySentences:
+            # df.set_index('id', inplace=True)
+            self.df['answer'] = self.df['answer'].str.split('.')
+            self.df = self.df.explode("answer", True)
+            self.df.drop(self.df[self.df["answer"] == ""].index, inplace=True)
+            self.df.reset_index(drop=True, inplace=True)
+
+    '''
+    inputs :
+    - dh : DatabaseHandler --> to retrieve data from database
+    - eventID : int --> we're doing this by event, so straight to the eventID
+    - selector : str --> pretty much formality.
+    - splitBySentences : bool --> Split each doc into sentences or not. Defaults to no.
+    '''
+    '''
+    outputs:
+    - df : DataFrame --> dataframe containing the thing we're gonna be using.
+    '''
+
+    def GetDF(self, dh: db.DatabaseHandler, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
+        df = dh.get_recordDataJoinedDF(selector=selector, ID=eventID)
+        if splitBySentences:
+            # df.set_index('id', inplace=True)
+            df['answer'] = df['answer'].str.split('.')
+            df = df.explode("answer", True)
+            df.drop(df[df["answer"] == ""].index, inplace=True)
+            df.reset_index(drop=True, inplace=True)
+        return df
+
+    '''
+    inputs:
+    - doc : str --> a string representing a sentence/document.
+    - isLemma : bool --> use lemmatizer or not? Defaults to not.
+    - isStopWords : bool --> use stopwords or not? Defaults to not.
+    - isInflect : bool --> use inflections (you're --> you are) or not? Defaults to not.
+    - isNumberFiltered :  bool --> delete numbers in the string? Defaults to yes. 
+    '''
+    '''
+    output : list<str> --> a list of word tokens (list<string>)
+    '''
+
+    def PreprocessDocument(self, doc: str, isLemma: bool = False, isStopWords: bool = False, isInflect: bool = False, isNumberFiltered: bool = True):
+        inflector = inflect.engine()
+        stopwordSet = set(stopwords.words("english"))
         lemmatizer = WordNetLemmatizer()
         punctuations = string.punctuation
-
         # if numbers are filtered, add that to the punctuation string
         if isNumberFiltered:
             punctuations += "1234567890"
 
         # case fold
-        corpus = corpus.lower()
+        doc = doc.lower()
 
         # remove puncs
-        corpus = "".join([char for char in corpus if char not in punctuations])
+        doc = "".join([char for char in doc if char not in punctuations])
 
         # tokenize it.
-        token_list = nltk.word_tokenize(corpus)
+        token_list = nltk.word_tokenize(doc)
 
         for i in range(len(token_list)):
             # if inflect
@@ -59,20 +119,31 @@ class AnomalyDetector():
             # if lemma
             if isLemma:
                 tagged_word = nltk.pos_tag([token_list[i]])
-                wordnet_pos = self.get_wordnet_pos(tagged_word[0][1])
+                wordnet_pos = getWordnetPos(tagged_word[0][1])
                 token_list[i] = lemmatizer.lemmatize(
                     tagged_word[0][0], pos=wordnet_pos)
 
             # if stopword
-            if isStopwords:
-                if token_list[i] in stop_words or token_list[i].isdigit():
+            if isStopWords:
+                if token_list[i] in stopwordSet or token_list[i].isdigit():
                     token_list[i] = "#"  # mark as #
 
         # remove the marked strings
         token_list = [token for token in token_list if token != "#"]
-        return token_list
 
-    def get_wordnet_pos(self, tag):
+        if token_list:
+            return token_list
+        return [""]
+
+    '''
+    inputs:
+    - tag : str --> the tag obtained from POS tagging.
+    '''
+    '''
+    outputs:
+    - str --> Wordnet POS tag.
+    '''
+    def getWordnetPos(tag):
         """Map POS tag to WordNet POS tag"""
         if tag.startswith('J'):
             return wordnet.ADJ
@@ -83,27 +154,46 @@ class AnomalyDetector():
         else:
             return wordnet.NOUN  # solves as noun by default.
 
-    def get_tfidf(self, documents, isPreprocessed=True):
+    '''
+    inputs:
+    - doclist : list<str> --> list of doc/sentences.
+    - isProcessed : bool --> has it already been preprocessed? Defaults to True.
+    '''
+    '''
+    outputs:
+    - df_tfidf : Dataframe --> the TFIDF matrix in df form. 
+    - matrix : matrix --> the TFIDF matrix purely. mainly for LDA purposes.
+    '''
+
+    def GetTFIDF(self, doclist: list, isPreprocessed=True):
         if not isPreprocessed:
-            documents = [self.preprocess_document(
-                doc, isLemma=True, isStopwords=True) for doc in documents]
-        flattened_documents = [' '.join(doc) for doc in documents]
+            doclist = [PreprocessDocument(
+                doc, isLemma=True, isStopWords=True) for doc in doclist]
+        # else:
+        #     # just tokenize the thing
+        #     doclist = [nltk.word_tokenize(doc) for doc in doclist]
+        # i think the thing has already been tokenized. That's the problem.
+        flat_doclist = [' '.join(doc)
+                        for doc in doclist]  # turn into one big corpus
         vectorizer = TfidfVectorizer()
-        matrix = vectorizer.fit_transform(flattened_documents)
+        matrix = vectorizer.fit_transform(flat_doclist)
         tfidf_keys = vectorizer.get_feature_names_out()
-        df_tfidf = pd.DataFrame(matrix.toarray(), columns=tfidf_keys)
+        df_tfidf = db.pd.DataFrame(matrix.toarray(), columns=tfidf_keys)
 
         return df_tfidf, matrix
 
-    # embed the individual words of a document. takes a list of tokens and a w2v model, returns a list of tuples(word, 300d vector).
-    def word_embed(self, document, model):
+    # input : list<str> : tokens of one document/sentence
+    # output : list<(str, list<int>[300])> : list of word-vector pair for each word available on the model
+    def WordEmbed(self, document: list, model):
         word_embed_pairs = []
         for word in document:
             if word in model:
                 word_embed_pairs.append((word, model[word]))
         return word_embed_pairs
 
-    def sentence_embed_unweighted_doc(self, word_embed_pair_list, aggregateMethod="avg"):
+    # input : list<(str, list<float>[300])>, str : word-vector pair list and preferred agg method.
+    # output : list<float>[300] : 300-d vector that represents an aggregated value of the input words
+    def SentenceEmbedUnweightedFunction(self, word_embed_pair_list: list, aggregateMethod: str = "avg"):
         wvs = []
         for pair in word_embed_pair_list:
             wvs.append(pair[1])
@@ -112,22 +202,33 @@ class AnomalyDetector():
         else:
             return np.sum(wvs, axis=0)
 
-    def sentence_embed_unweighted(self, word_embedded_docs, aggregateMethod="avg"):
+    # input : list<list<(str, list<float>[300])>>, str : list containing word-vector pairs and preferred agg method
+    # output : list<(str, list<int>[300])> : list containing sentence-vector pairs.
+    def SentenceEmbedUnweighted(self, word_embedded_docs: list, aggregateMethod: str = "avg"):
         sentence_embedded_docs = []
         for i in range(len(word_embedded_docs)):
-            sentence_embedded_docs.append(self.sentence_embed_unweighted_doc(
+            sentence_embedded_docs.append(SentenceEmbedUnweightedFunction(
                 word_embedded_docs[i], aggregateMethod))
         return sentence_embedded_docs
 
-    # embed the words into sentences with a preferred method. takes a list of tuples (word, 300d vector), a tfidf matrix, and an index. returns a 300d vector aggregated sentence with the preferred method.
-    def sentence_embed_weighted_doc(self, word_embed_pair_list, tfidf_matrix, index, aggregateMethod="avg"):
+    '''
+    input :
+    list<list<(str, list<float>[300])>> : word-vector pair list
+    matrix : tf-idf matrix for the corresponding doc
+    int : the row we want
+    str : preferred agg method
+    '''
+    # output : list<float>[300] : 300-d vector that represents an aggregated value of the input words
+
+    def SentenceEmbedWeightedFunction(self, word_embed_pair_list: list, tfidf_matrix, index: int, aggregateMethod: str = "avg"):
         weighted_wvs = []
+        # multiplies each word with its TF-IDF value in the corresponding row. Is 0 if word isn't found somehow.
         for pair in word_embed_pair_list:
             tfidf_weight = 0
             if pair[0] in tfidf_matrix:
                 tfidf_weight = tfidf_matrix[pair[0]][index]
             weighted_wvs.append(pair[1] * tfidf_weight)
-
+        # turn into array for fast aggregating
         weighted_wvs = np.array(weighted_wvs)
         if aggregateMethod == "avg":
             sentence_vector = np.mean(weighted_wvs, axis=0)
@@ -135,115 +236,153 @@ class AnomalyDetector():
             sentence_vector = np.sum(weighted_wvs, axis=0)
         return sentence_vector
 
-    def sentence_embed_weighted(self, word_embedded_docs, tfidf_matrix, aggregateMethod="avg"):
+    # input : list<list<(str, list<float>[300])>>, str : list containing word-vector pairs, TF-IDF matrix of the corpus, and preferred agg method
+    # output : list<(str, list<float>[300])> : list containing sentence-vector pairs.
+    def SentenceEmbedWeighted(self, word_embedded_docs: list, tfidf_matrix, aggregateMethod="avg"):
         sentence_embedded_docs = []
         for i in range(len(word_embedded_docs)):
-            sentence_embedded_docs.append(self.sentence_embed_weighted_doc(
+            sentence_embedded_docs.append(SentenceEmbedWeightedFunction(
                 word_embedded_docs[i], tfidf_matrix, i, aggregateMethod))
         return sentence_embedded_docs
 
-    def LDA(self, docs, topic_prob):
-        dictionary = corpora.Dictionary(docs)
-        corpus = [dictionary.doc2bow(doc) for doc in docs]
-        tfidf = models.TfidfModel(corpus)
-        corpus_tfidf = tfidf[corpus]
+    '''
+    input:
+    - doclist : list<list<str>> --> list of tokenized sentences/docs
+    - topics : int --> number of inferred topics.
+    - use_tfidf : bool --> use TFIDF or not? defaults to yes.
+    '''
+    '''
+    output:
+    - docFeatureList : list<list<float>> --> topic distribution for each sentence/doc
+    '''
+
+    def GetLDADistribution(self, doclist: list, topics: int = 5, use_tfidf: bool = True):
+        new_corpus = []
+
+        if use_tfidf:
+            for i in range(len(doclist)):
+                doc = [(j, self.tfidf_matrix[i, j])
+                       for j in self.tfidf_matrix[i].indices]
+                new_corpus.append(doc)
+                gensim_dict = corpora.Dictionary.from_corpus(new_corpus)
+        else:
+            gensim_dict = corpora.Dictionary(doclist)
+            new_corpus = [gensim_dict.doc2bow(doc) for doc in doclist]
+
         lda_model = gensim.models.LdaModel(
-            corpus_tfidf, num_topics=topic_prob, id2word=dictionary)
-        doc_topic_distributions = lda_model[corpus]
-        # view it...
+            new_corpus, num_topics=topics, id2word=gensim_dict)
+        goofy_ahh_doc_topic_distributions = lda_model[new_corpus]
 
         docFeatureList = []
-        for doc_topic_dist in doc_topic_distributions:
-            featureList = [0.0 for i in range(topic_prob)]
+        for doc_topic_dist in goofy_ahh_doc_topic_distributions:
+            featureList = [0.0 for i in range(0, topics)]
             for topic_dist in doc_topic_dist:
                 featureList[topic_dist[0]] = topic_dist[1]
             docFeatureList.append(featureList)
+
         return docFeatureList
 
-    # returns a tsne shrinkage also...
-    def plot_documents(self, df):
-        labels = np.array(df["No"])
-        # don't forget to list it first, then np array it later.
-        values = list(df["Document Embed"])
+    '''
+    inputs:
+    - vectors : list<list<float>> --> list of features corresponding to each doc/sentence
+    - epsilon : float --> the radius within which points are considered connected.
+    - min : int --> minimum amount of connected points for a point to be considered a core point of a cluster.
+    '''
+    '''
+    output:
+    clusters : list<int> --> a list of integers to assign each data point to a cluster. -1 means outlier.
+    '''
 
-        # train model
-        tsne_model = TSNE(perplexity=20, n_components=2,
-                          init='pca', n_iter=2500, random_state=23)
-        new_values = tsne_model.fit_transform(np.array(values))
-
-        # plot
-        x = []
-        y = []
-        for value in new_values:
-            x.append(value[0])
-            y.append(value[1])
-
-        plt.figure(figsize=(20, 20))
-        for i in range(len(x)):
-            plt.scatter(x[i], y[i])
-            plt.annotate(labels[i],
-                         xy=(x[i], y[i]),
-                         xytext=(5, 2),
-                         textcoords='offset points',
-                         ha='right',
-                         va='bottom')
-        plt.show()
-        # use the thing to find new clusters.
-        return new_values
-
-    def dbscan_draw(self, vectors, epsilon, min):
+    def GetDBSCANClusters(self, vectors, epsilon: float, min: int):
         dbscan = DBSCAN(eps=epsilon, min_samples=min)
         clusters = dbscan.fit_predict(vectors)
-        plt.title("to the depths of depravity {} and the cusp of blasphemy {}.".format(
-            epsilon, min))
-        plt.scatter(vectors[:, 0], vectors[:, 1], c=clusters)
-        plt.show()
-        print(clusters)
+        # plt.title("to the depths of depravity {} and the cusp of blasphemy {}.".format(epsilon, min))
+        # plt.scatter(vectors[:, 0], vectors[:, 1], c=clusters)
+        # plt.show()
+        # print(clusters)
+        return clusters
 
-    def ExtractFeatures(self, method, model, isWeighted=True, aggregateMethod="avg", epsilon=0.01, minsamp=2, topics=5):
-        # initialize components that need to be initialized.
+    '''
+    inputs :
+    - clusters : list<int> --> a list of clusters assigned to each doc/sentence
+    - df : DataFrame --> the dataframe in question
+    '''
+    '''
+    outputs:
+    - dfOutliers : DataFrame --> the dataframe whose answers have been marked as outliers.
+    - dfGoods : DataFrame --> the dataframe whose answers have not been marked as outliers.
+    '''
 
-        # extract the dataset in df
-        df = pd.read_excel("Dataset.xlsx")
+    def ReturnClusters(self, clusters: list, df: db.pd.DataFrame):
+        df["Cluster Assignment"] = clusters
+        dfGoods = df.loc[df["Cluster Assignment"] != -1]
+        dfOutliers = df.loc[df["Cluster Assignment"] == -1]
+        return dfOutliers, dfGoods
 
-        # preprocess each document
-        preprocessed_docs = [self.preprocess_document(
-            doc, isLemma=True, isStopwords=True) for doc in df["Answer"]]
+    def GetAnomalies_DBSCAN_Embedding(self, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon: float = 0.01, minsamp: int = 2):
+        # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
 
-        # prepare a word-set
-        # my_word_set = get_word_set(df)
+        # preprocess each doc/sentence
+        self.preprocessedDocs = [self.PreprocessDocument(
+            doc, isLemma=True, isStopWords=True) for doc in self.df["answer"]]
 
-        # prepare TF-IDF matrix for weighted embedding or weighted LDA
+        # extract feature with embedding
+        self.wordEmbeddedDocs = [self.WordEmbed(
+            doc, self.model) for doc in self.preprocessedDocs]
+
+        # if weighted, prepare TF-IDF and embed sentences with weight.
         if isWeighted:
-            my_tfidf, my_matrix = self.get_tfidf(preprocessed_docs)
-
-        # choose feature extraction (embed or LDA)
-        doc_embeds = []
-        if method == "embed":
-            word_embedded_docs = [self.word_embed(
-                doc, model) for doc in preprocessed_docs]  # word embedding
-            # choose sentence embedding method here
-            if isWeighted:
-                doc_embeds = self.sentence_embed_weighted(
-                    word_embedded_docs, my_tfidf, aggregateMethod)
-            else:
-                doc_embeds = self.sentence_embed_unweighted(
-                    word_embedded_docs, aggregateMethod)
-        elif method == "lda":
-            doc_embeds = self.LDA(preprocessed_docs, topics)
+            self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
+                self.preprocessedDocs)
+            self.doc_embeds = self.SentenceEmbedWeighted(
+                self.wordEmbeddedDocs, self.tfidf_df, aggregateMethod)
+        else:
+            self.doc_embeds = self.SentenceEmbedUnweighted(
+                self.wordEmbeddedDocs, aggregateMethod)
 
         # append embedding to each document
-        if doc_embeds:
-            df["Document Embed"] = doc_embeds
+        if self.doc_embeds:
+            self.df["Document Embed"] = self.doc_embeds
 
-        # get reduced values and draw the thang
-        tsne_values = self.plot_documents(df)
-        self.dbscan_draw(tsne_values, epsilon, minsamp)
+        # apply DBSCAN
+        self.clusters = self.GetDBSCANClusters(
+            list(self.df["Document Embed"]), epsilon, minsamp)
 
-        # # return the DF
-        # return df
+        # return the dfs
+        return self.ReturnClusters(self.clusters, self.df)
 
+    def GetAnomalies_DBSCAN_LDA(self, isWeighted: bool = True, topics: int = 5, epsilon: float = 0.01, minsamp: int = 5):
+        # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
 
-# dh = db.DatabaseHandler("database/testdb.db")
-# myDF = dh.get_recordDataJoinedDF("event_id", 18)
-# ad = AnomalyDetector(myDF)
+        # preprocess each doc/sentence
+        self.preprocessedDocs = [self.PreprocessDocument(
+            doc, isLemma=True, isStopWords=True) for doc in self.df["answer"]]
+
+        # extract feature with embedding
+        self.wordEmbeddedDocs = [self.WordEmbed(
+            doc, self.model) for doc in self.preprocessedDocs]
+
+        # if weighted, prepare tf-idf matrix.
+        if isWeighted:
+            self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
+                self.preprocessedDocs)
+
+        # use the in-house options for weighted or not.
+        self.doc_embeds = self.GetLDADistribution(
+            self.preprocessedDocs, topics=topics, use_tfidf=isWeighted)
+
+        # append embedding to each document
+        if self.doc_embeds:
+            self.df["Document Embed"] = self.doc_embeds
+
+        # apply DBSCAN
+        self.clusters = self.GetDBSCANClusters(
+            list(self.df["Document Embed"]), epsilon, minsamp)
+
+        # return the dfs
+        return self.ReturnClusters(self.clusters, self.df)
+
+    def GetAnomalies(self, method: str, model, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon=0.01, minsamp=2, topics=5):
+        # initialize
+        # extract the dataset
+        self.df = self.GetDF()
