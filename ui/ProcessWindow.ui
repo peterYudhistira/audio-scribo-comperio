@@ -151,6 +151,11 @@ QCheckBox{
      <string>Text Transcript</string>
     </property>
    </column>
+   <column>
+    <property name="text">
+     <string>Lang</string>
+    </property>
+   </column>
   </widget>
   <widget class="QLabel" name="label_theme">
    <property name="geometry">
@@ -181,8 +186,8 @@ QCheckBox{
   <widget class="QPushButton" name="button_process">
    <property name="geometry">
     <rect>
-     <x>320</x>
-     <y>340</y>
+     <x>40</x>
+     <y>330</y>
      <width>161</width>
      <height>61</height>
     </rect>
@@ -204,7 +209,7 @@ QCheckBox{
     <enum>Qt::Vertical</enum>
    </property>
   </widget>
-  <widget class="QCheckBox" name="check_transcribe">
+  <widget class="QCheckBox" name="check_isSplit">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -214,10 +219,10 @@ QCheckBox{
     </rect>
    </property>
    <property name="text">
-    <string>Transcribe First</string>
+    <string>Split Document into Sentences</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="check_transcribe_2">
+  <widget class="QCheckBox" name="check_saveResult">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -227,10 +232,10 @@ QCheckBox{
     </rect>
    </property>
    <property name="text">
-    <string>Show Clustering as Graph</string>
+    <string>Save Cluster Result</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="check_transcribe_3">
+  <widget class="QCheckBox" name="check_nerdMode">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -240,23 +245,32 @@ QCheckBox{
     </rect>
    </property>
    <property name="text">
-    <string>Nerd Mode🤓</string>
+    <string>Nerd Mode🤓 (TBA)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="button_transcribe_all">
    <property name="geometry">
     <rect>
      <x>320</x>
-     <y>230</y>
+     <y>330</y>
      <width>161</width>
      <height>61</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Bahnschrift SemiBold</family>
+     <pointsize>20</pointsize>
+     <weight>7</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
    <property name="styleSheet">
-    <string notr="true">font: 63 16pt &quot;Bahnschrift SemiBold&quot;;</string>
+    <string notr="true">font: 63 20pt &quot;Bahnschrift SemiBold&quot;;</string>
    </property>
    <property name="text">
-    <string>Transcribe All</string>
+    <string>Transcribe</string>
    </property>
   </widget>
  </widget>

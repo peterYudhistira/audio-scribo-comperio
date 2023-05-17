@@ -7,6 +7,7 @@ from objects import (
     processwindow as pw,
     addwindow as aw,
     turntotexinator as ttt,
+    anomalydetector as ad,
     db
 )
 from PyQt6 import (
@@ -443,7 +444,10 @@ class AddWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    # please PLEASE don't make me have to use multithreading again PLEASE
+    ad = ad.AnomalyDetector(dh=cursor, modelName="")
+    print(ad.dh.list_events())
     menu_widget = MainMenuWindow()
     menu_widget.show()
     app.exec()

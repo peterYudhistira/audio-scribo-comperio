@@ -4,9 +4,11 @@ import os
 
 
 class DatabaseHandler():
-    def __init__(self, dbName):
+    def __init__(self, dbName, keepSchema: bool = True):
         self.cursor = sqlite3.connect(dbName)
-        self.create_tables()
+        if not keepSchema:
+            print('ya schema empty, yeet')
+            self.create_tables()
 
     # create
     def create_tables(self):
@@ -25,7 +27,7 @@ class DatabaseHandler():
                 datetime TEXT NOT NULL
             );
         """)
-
+        self.cursor.execute("DROP TABLE record_data")
         self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS record_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,7 +35,8 @@ class DatabaseHandler():
                 speaker_id INTEGER,
                 question_text NOT NULL,
                 transcript_audio TEXT NOT NULL,
-                transcript_text TEXT NOT NULL
+                transcript_text TEXT NOT NULL,
+                transcribe_lang TEXT NOT NULL
             );
         """)
 
@@ -55,17 +58,17 @@ class DatabaseHandler():
         # create the directory.
         os.mkdir("records/event{}".format(id))
 
-    def create_record_audio(self, event_id, speaker_id, question, audio_path):
+    def create_record_audio(self, event_id, speaker_id, question, audio_path, transcribe_lang):
         self.cursor.execute("""
-                INSERT INTO record_data (event_id, speaker_id, question_text, transcript_audio, transcript_text)
-                VALUES (?, ?, ?, ?, "")
-        """, (event_id, speaker_id, question, audio_path))
+                INSERT INTO record_data (event_id, speaker_id, question_text, transcript_audio, transcript_text, transcribe_lang)
+                VALUES (?, ?, ?, ?, "", ?)
+        """, (event_id, speaker_id, question, audio_path, transcribe_lang))
         self.cursor.commit()
 
     def create_record_text(self, event_id, speaker_id, question, text):
         self.cursor.execute("""
-                INSERT INTO record_data (event_id, speaker_id, question_text, transcript_audio, transcript_text)
-                VALUES (?, ?, ?, "", ?)
+                INSERT INTO record_data (event_id, speaker_id, question_text, transcript_audio, transcript_text, transcribe_lang)
+                VALUES (?, ?, ?, "", ?, "")
         """, (event_id, speaker_id, question, text))
         self.cursor.commit()
 
@@ -148,9 +151,10 @@ class DatabaseHandler():
             speakerData = self.get_speaker("code", speakerCode)
             speakerID = speakerData[0]
 
-            self.create_record_text(event_id=eventID, speaker_id=speakerID, question=df.loc[i]["Question"], text=df.loc[i]["Answer"])
+            self.create_record_text(event_id=eventID, speaker_id=speakerID,
+                                    question=df.loc[i]["Question"], text=df.loc[i]["Answer"])
             print("-" * 80)
-            
+
     def get_recordDataJoined(self, selector, ID):
         query = """
                 SELECT record_data.id as id, events.title as event_title, events.datetime as date, speakers.code as speaker_code, question_text, transcript_audio, transcript_text
@@ -162,7 +166,7 @@ class DatabaseHandler():
                 WHERE record_data.{} = ?
         """.format(selector)
         return self.cursor.execute(query, (ID,)).fetchall()
-    
+
     def get_recordDataJoinedDF(self, selector, ID):
         query = """
                 SELECT record_data.id as id, events.title as event_title, speakers.code as speaker, question_text as question, transcript_text as answer
@@ -184,3 +188,33 @@ class DatabaseHandler():
 # dh.create_recordDataFromExcel("database/raws/Dataset.xlsx", "2-Jul", 20)
 # print(dh.get_recordDataJoined("event_id", 10))
 # print(dh.get_recordData("event_id", 11))
+
+# dhActual = DatabaseHandler("database/testdb.db", keepSchema=False)
+# dhTemp = DatabaseHandler("database/testdb_backup.db")
+schemaMap = {
+    "id": 0,
+    "event_id": 1,
+    "speaker_id": 2,
+    "question": 3,
+    "transcript_audio": 4,
+    "transcript_text": 5,
+    "transcribe_lang": 6
+}
+# record_data = dhTemp.list_recordData()
+
+# for record in record_data:
+#     if record[schemaMap["transcript_text"]] == "": # if audio only, create audio transcript
+#         dhActual.create_record_audio(record[schemaMap["event_id"]], record[schemaMap["speaker_id"]], record[schemaMap["question"]], record[schemaMap["transcript_audio"]], "en")
+#     else: # if text, create text transcript.
+#         dhActual.create_record_text(record[schemaMap["event_id"]], record[schemaMap["speaker_id"]], record[schemaMap["question"]], record[schemaMap["transcript_text"]])
+# dhActual.cursor.close()
+# dhTemp.cursor.close()
+
+
+dh = DatabaseHandler("database/testdb.db")
+
+recordList = dh.list_recordData()
+
+for record in recordList:
+    if record[schemaMap["transcript_text"]] == "":
+        print(record[schemaMap["id"]], " | ", record[schemaMap["transcript_audio"]], "language : ", record[schemaMap["transcribe_lang"]])
