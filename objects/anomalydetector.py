@@ -22,20 +22,15 @@ from sklearn.manifold import TSNE
 
 
 class AnomalyDetector():
-    def __init__(self, dbName: str = "",  dh=None, model=None) -> None:
+    def __init__(self, dbName: str = "",  dh=None, model=None, modelName="glove-wiki-gigaword-300") -> None:
         if dh is None:
             self.dh = db.DatabaseHandler(dbName=dbName)
         else:
             self.dh = dh
         if model is None:
-            self.model = api.load("glove-wiki-gigaword-300")
+            self.model = api.load(modelName)
         else:
             self.model = model
-    # def __init__(self, eventID: int, isSplit: bool) -> None:
-    #     self.dh = db.DatabaseHandler("test.db")
-    #     self.df = self.GetDF(self.dh, "eventID", eventID, isSplit)
-    #     self.model = api.load("glove-wiki-gigaword-300")
-    #     pass
 
     '''
     inputs :
@@ -119,7 +114,7 @@ class AnomalyDetector():
             # if lemma
             if isLemma:
                 tagged_word = nltk.pos_tag([token_list[i]])
-                wordnet_pos = getWordnetPos(tagged_word[0][1])
+                wordnet_pos = self.getWordnetPos(tagged_word[0][1])
                 token_list[i] = lemmatizer.lemmatize(
                     tagged_word[0][0], pos=wordnet_pos)
 
@@ -143,7 +138,8 @@ class AnomalyDetector():
     outputs:
     - str --> Wordnet POS tag.
     '''
-    def getWordnetPos(tag):
+
+    def getWordnetPos(self, tag):
         """Map POS tag to WordNet POS tag"""
         if tag.startswith('J'):
             return wordnet.ADJ
@@ -167,7 +163,7 @@ class AnomalyDetector():
 
     def GetTFIDF(self, doclist: list, isPreprocessed=True):
         if not isPreprocessed:
-            doclist = [PreprocessDocument(
+            doclist = [self.PreprocessDocument(
                 doc, isLemma=True, isStopWords=True) for doc in doclist]
         # else:
         #     # just tokenize the thing
@@ -207,7 +203,7 @@ class AnomalyDetector():
     def SentenceEmbedUnweighted(self, word_embedded_docs: list, aggregateMethod: str = "avg"):
         sentence_embedded_docs = []
         for i in range(len(word_embedded_docs)):
-            sentence_embedded_docs.append(SentenceEmbedUnweightedFunction(
+            sentence_embedded_docs.append(self.SentenceEmbedUnweightedFunction(
                 word_embedded_docs[i], aggregateMethod))
         return sentence_embedded_docs
 
@@ -241,7 +237,7 @@ class AnomalyDetector():
     def SentenceEmbedWeighted(self, word_embedded_docs: list, tfidf_matrix, aggregateMethod="avg"):
         sentence_embedded_docs = []
         for i in range(len(word_embedded_docs)):
-            sentence_embedded_docs.append(SentenceEmbedWeightedFunction(
+            sentence_embedded_docs.append(self.SentenceEmbedWeightedFunction(
                 word_embedded_docs[i], tfidf_matrix, i, aggregateMethod))
         return sentence_embedded_docs
 
@@ -343,6 +339,7 @@ class AnomalyDetector():
         # append embedding to each document
         if self.doc_embeds:
             self.df["Document Embed"] = self.doc_embeds
+            self.df = self.df.dropna(subset=["Document Embed"]) # preventing NaN in the simplest fucking way in know.
 
         # apply DBSCAN
         self.clusters = self.GetDBSCANClusters(
@@ -358,10 +355,6 @@ class AnomalyDetector():
         self.preprocessedDocs = [self.PreprocessDocument(
             doc, isLemma=True, isStopWords=True) for doc in self.df["answer"]]
 
-        # extract feature with embedding
-        self.wordEmbeddedDocs = [self.WordEmbed(
-            doc, self.model) for doc in self.preprocessedDocs]
-
         # if weighted, prepare tf-idf matrix.
         if isWeighted:
             self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
@@ -374,6 +367,7 @@ class AnomalyDetector():
         # append embedding to each document
         if self.doc_embeds:
             self.df["Document Embed"] = self.doc_embeds
+            self.df = self.df.dropna(subset=["Document Embed"]) # preventing NaN in the simplest fucking way in know.
 
         # apply DBSCAN
         self.clusters = self.GetDBSCANClusters(
@@ -386,3 +380,13 @@ class AnomalyDetector():
         # initialize
         # extract the dataset
         self.df = self.GetDF()
+
+
+# ad = AnomalyDetector("database/testdb.db")
+
+# ad.SetDF(ad.dh, 19, splitBySentences=False)
+
+# df_outliers, df_goods = ad.GetAnomalies_DBSCAN_Embedding(isWeighted=True, aggregateMethod="avg", epsilon=0.6, minsamp=2)
+
+# print(df_outliers)
+# print(df_goods)
