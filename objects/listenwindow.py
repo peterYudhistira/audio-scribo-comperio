@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ListenWindow.ui'
+# Form implementation generated from reading ui file 'ui/ListenWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.5.0
 #
@@ -54,6 +54,31 @@ class Ui_Form(object):
 "\n"
 "QPushButton#button_record:checked:hover{\n"
 "    background:rgb(255, 35, 28);\n"
+"}\n"
+"\n"
+"QPushButton#button_toggleLang:checked{\n"
+"    \n"
+"    background: rgb(32, 252, 255);\n"
+"}\n"
+"\n"
+"QPushButton#button_toggleLang:checked:hover{\n"
+"    \n"
+"    background: rgb(0, 170, 255);\n"
+"}\n"
+"\n"
+"QPushButton#button_toggleLang:pressed{\n"
+"    \n"
+"    background: rgb(85, 0, 255);\n"
+"}\n"
+"\n"
+"QPushButton#button_toggleLang{\n"
+"    \n"
+"    background: rgb(255, 42, 88);\n"
+"}\n"
+"\n"
+"QPushButton#button_toggleLang:hover{\n"
+"    \n"
+"    background: rgb(255, 0, 0);\n"
 "}")
         self.button_record = QtWidgets.QPushButton(parent=Form)
         self.button_record.setGeometry(QtCore.QRect(640, 90, 200, 200))
@@ -66,7 +91,7 @@ class Ui_Form(object):
         self.button_record.setFont(font)
         self.button_record.setText("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("asset/images/mic.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        icon.addPixmap(QtGui.QPixmap("ui\\asset/images/mic.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.button_record.setIcon(icon)
         self.button_record.setIconSize(QtCore.QSize(100, 100))
         self.button_record.setCheckable(True)
@@ -143,18 +168,27 @@ class Ui_Form(object):
         self.button_back = QtWidgets.QPushButton(parent=Form)
         self.button_back.setGeometry(QtCore.QRect(40, 20, 101, 51))
         self.button_back.setObjectName("button_back")
-        self.widget = QtWidgets.QWidget(parent=Form)
-        self.widget.setGeometry(QtCore.QRect(40, 110, 441, 61))
-        self.widget.setObjectName("widget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(parent=Form)
+        self.layoutWidget.setGeometry(QtCore.QRect(40, 110, 441, 61))
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label_chooseEvent = QtWidgets.QLabel(parent=self.widget)
+        self.label_chooseEvent = QtWidgets.QLabel(parent=self.layoutWidget)
         self.label_chooseEvent.setObjectName("label_chooseEvent")
         self.verticalLayout.addWidget(self.label_chooseEvent)
-        self.combo_eventList = QtWidgets.QComboBox(parent=self.widget)
+        self.combo_eventList = QtWidgets.QComboBox(parent=self.layoutWidget)
         self.combo_eventList.setObjectName("combo_eventList")
         self.verticalLayout.addWidget(self.combo_eventList)
+        self.button_toggleLang = QtWidgets.QPushButton(parent=Form)
+        self.button_toggleLang.setGeometry(QtCore.QRect(870, 290, 80, 80))
+        self.button_toggleLang.setStyleSheet("QButton#button_togglelang{\n"
+"    \n"
+"    font: 22pt \"Algerian\";\n"
+"}")
+        self.button_toggleLang.setCheckable(True)
+        self.button_toggleLang.setChecked(True)
+        self.button_toggleLang.setObjectName("button_toggleLang")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -169,6 +203,7 @@ class Ui_Form(object):
         self.label_record.setText(_translate("Form", "Press to Record"))
         self.button_back.setText(_translate("Form", "Back"))
         self.label_chooseEvent.setText(_translate("Form", "Choose Event"))
+        self.button_toggleLang.setText(_translate("Form", "ID"))
 
 
 if __name__ == "__main__":

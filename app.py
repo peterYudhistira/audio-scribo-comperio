@@ -134,6 +134,8 @@ class ListenWindow(qtw.QWidget):
         self.msgBox = qtw.QMessageBox()
         self.msgBox.setStandardButtons(qtw.QMessageBox.StandardButton.Ok)
         self.msgBox.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
+        self.ui.button_record.setIcon(qtg.QIcon("asset/images/mic.png"))
+        self.ui.button_toggleLang.setText("ID")
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
@@ -141,6 +143,7 @@ class ListenWindow(qtw.QWidget):
         self.ui.combo_eventList.currentIndexChanged.connect(self.ChangeEvent)
         self.ui.combo_speakerList.currentIndexChanged.connect(
             self.ChangeSpeaker)
+        self.ui.button_toggleLang.clicked.connect(self.ToggleLang)
 
     def GoBack(self):
         self.hide()
@@ -149,16 +152,16 @@ class ListenWindow(qtw.QWidget):
     def ToggleRecord(self):
         if self.ValidateRecord():
             if self.ui.button_record.isChecked():
-
                 # file path
                 filePath = "records/event{}/{}.wav".format(self.ui.combo_eventList.currentData(
                 ), self.ui.combo_speakerList.currentText().split(" |")[0] + dt.now().strftime("%d%m%Y%H%M%S"))
                 # begin record thread
                 self.ui.rt = RecorderThread(filePath)
                 self.ui.rt.start()
-
                 # change label
                 self.ui.label_record.setText("Recording...")
+                self.ui.button_toggleLang.setDisabled(
+                    True)  # disable toggle language
             else:
                 # save in database
                 self.ui.rt.toggle_signal.connect(self.SaveRecording)
@@ -170,13 +173,22 @@ class ListenWindow(qtw.QWidget):
 
                 # success
                 self.MessageSuccess("Recording finished.")
+                self.ui.button_toggleLang.setDisabled(
+                    False)  # re-enable toggle language
         else:
             self.MessageFail("Fill the speaker and event data first.")
             self.ui.button_record.setChecked(False)
 
+    def ToggleLang(self):
+        sender = self.sender()
+        if sender.isChecked():
+            sender.setText("ID")
+        else:
+            sender.setText("EN")
+
     def SaveRecording(self, fileName):
         cursor.create_record_audio(self.ui.combo_eventList.currentData(
-        ), self.ui.combo_speakerList.currentData(), self.ui.text_question.toPlainText(), fileName)
+        ), self.ui.combo_speakerList.currentData(), self.ui.text_question.toPlainText(), fileName, self.ui.button_toggleLang.text())
 
     def LoadComboBox(self, comboBox):
         dataList = []
@@ -296,6 +308,8 @@ class ProcessWindow(qtw.QWidget):
 
             table.setItem(i, 4, qtw.QTableWidgetItem(
                 str(dataList[i][6])))  # text
+            table.setItem(i, 5, qtw.QTableWidgetItem(
+                str(dataList[i][7])))  # language code
         # resize
         table.resizeRowsToContents()
         table.horizontalHeader().setSectionResizeMode(
@@ -447,7 +461,6 @@ if __name__ == "__main__":
     # ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
     ad = ad.AnomalyDetector(dh=cursor, modelName="")
-    print(ad.dh.list_events())
     menu_widget = MainMenuWindow()
     menu_widget.show()
     app.exec()

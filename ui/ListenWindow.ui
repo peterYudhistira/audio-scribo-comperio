@@ -55,6 +55,31 @@ QPushButton#button_record:hover{
 
 QPushButton#button_record:checked:hover{
 	background:rgb(255, 35, 28);
+}
+
+QPushButton#button_toggleLang:checked{
+	
+	background: rgb(32, 252, 255);
+}
+
+QPushButton#button_toggleLang:checked:hover{
+	
+	background: rgb(0, 170, 255);
+}
+
+QPushButton#button_toggleLang:pressed{
+	
+	background: rgb(85, 0, 255);
+}
+
+QPushButton#button_toggleLang{
+	
+	background: rgb(255, 42, 88);
+}
+
+QPushButton#button_toggleLang:hover{
+	
+	background: rgb(255, 0, 0);
 }</string>
   </property>
   <widget class="QPushButton" name="button_record">
@@ -240,7 +265,7 @@ QPushButton#button_record:checked:hover{
     <string>Back</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -261,6 +286,31 @@ QPushButton#button_record:checked:hover{
      <widget class="QComboBox" name="combo_eventList"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="button_toggleLang">
+   <property name="geometry">
+    <rect>
+     <x>870</x>
+     <y>290</y>
+     <width>80</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QButton#button_togglelang{
+	
+	font: 22pt &quot;Algerian&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>ID</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
   </widget>
  </widget>
  <resources/>

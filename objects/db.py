@@ -157,7 +157,7 @@ class DatabaseHandler():
 
     def get_recordDataJoined(self, selector, ID):
         query = """
-                SELECT record_data.id as id, events.title as event_title, events.datetime as date, speakers.code as speaker_code, question_text, transcript_audio, transcript_text
+                SELECT record_data.id as id, events.title as event_title, events.datetime as date, speakers.code as speaker_code, question_text, transcript_audio, transcript_text, transcribe_lang
                 FROM record_data
                 INNER JOIN events
                 ON record_data.event_id = events.id
@@ -191,15 +191,15 @@ class DatabaseHandler():
 
 # dhActual = DatabaseHandler("database/testdb.db", keepSchema=False)
 # dhTemp = DatabaseHandler("database/testdb_backup.db")
-schemaMap = {
-    "id": 0,
-    "event_id": 1,
-    "speaker_id": 2,
-    "question": 3,
-    "transcript_audio": 4,
-    "transcript_text": 5,
-    "transcribe_lang": 6
-}
+# schemaMap = {
+#     "id": 0,
+#     "event_id": 1,
+#     "speaker_id": 2,
+#     "question": 3,
+#     "transcript_audio": 4,
+#     "transcript_text": 5,
+#     "transcribe_lang": 6
+# }
 # record_data = dhTemp.list_recordData()
 
 # for record in record_data:
@@ -209,12 +209,10 @@ schemaMap = {
 #         dhActual.create_record_text(record[schemaMap["event_id"]], record[schemaMap["speaker_id"]], record[schemaMap["question"]], record[schemaMap["transcript_text"]])
 # dhActual.cursor.close()
 # dhTemp.cursor.close()
+# dh = DatabaseHandler("database/testdb.db")
 
+# recordList = dh.list_recordData()
 
-dh = DatabaseHandler("database/testdb.db")
-
-recordList = dh.list_recordData()
-
-for record in recordList:
-    if record[schemaMap["transcript_text"]] == "":
-        print(record[schemaMap["id"]], " | ", record[schemaMap["transcript_audio"]], "language : ", record[schemaMap["transcribe_lang"]])
+# for record in recordList:
+#     if record[schemaMap["transcript_text"]] == "":
+#         print(record[schemaMap["id"]], " | ", record[schemaMap["transcript_audio"]], "language : ", record[schemaMap["transcribe_lang"]])

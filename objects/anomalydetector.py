@@ -1,6 +1,6 @@
 # imports go here
 import numpy as np
-import db
+from objects import db
 import pandas as pd
 import inflect
 import string
@@ -28,7 +28,8 @@ class AnomalyDetector():
         else:
             self.dh = dh
         if model is None:
-            self.model = api.load(modelName)
+            if modelName != "":
+                self.model = api.load(modelName)
         else:
             self.model = model
 
@@ -52,6 +53,9 @@ class AnomalyDetector():
             self.df = self.df.explode("answer", True)
             self.df.drop(self.df[self.df["answer"] == ""].index, inplace=True)
             self.df.reset_index(drop=True, inplace=True)
+
+    def SetModel(self, modelName:str="glove-wiki-gigaword-300"):
+        self.model = api.load(modelName)
 
     '''
     inputs :
@@ -380,7 +384,6 @@ class AnomalyDetector():
         # initialize
         # extract the dataset
         self.df = self.GetDF()
-
 
 # ad = AnomalyDetector("database/testdb.db")
 
