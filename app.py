@@ -1,6 +1,4 @@
 import typing
-from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
     listenwindow as lw,
@@ -263,6 +261,8 @@ class ProcessWindow(qtw.QWidget):
         self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.LoadComboBox(self.ui.combo_eventList)
+        self.ui.check_saveTranscriptToDatabase.setChecked(True)
+        self.ui.check_saveTranscriptToDatabase.setDisabled(True) # we disable this for now.
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
@@ -349,14 +349,20 @@ class ProcessWindow(qtw.QWidget):
     def GetTranscript(self, transcriptResult: list):
         print("im here now??")
         print(transcriptResult)
-        # display it, but also update the record_data tables.
+        # display it and write to DB and/or CSV if needed.
         for row in range(len(transcriptResult)):
             self.ui.table_recordData.setItem(
                 transcriptResult[row][0], 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
-            cursor.update_recordData_text(int(self.ui.table_recordData.item(row, 0).text()), str(transcriptResult[row][2])) # at times like this i miss GORM.
+            if self.ui.check_saveTranscriptToDatabase.isChecked():
+                cursor.update_recordData_text(int(self.ui.table_recordData.item(row, 0).text()), str(transcriptResult[row][2])) # at times like this i miss GORM.
+            
+
                 
-        self.ui.table_recordData.resizeColumnsToContents()
         self.ui.table_recordData.resizeRowsToContents()
+        self.ui.table_recordData.horizontalHeader().setSectionResizeMode(
+            1, qtw.QHeaderView.ResizeMode.Stretch)
+        self.ui.table_recordData.horizontalHeader().setSectionResizeMode(
+            4, qtw.QHeaderView.ResizeMode.Stretch)
         self.ui.button_back.setDisabled(False) # unfreeze
 
     def TogglePlayRecord(self, filePath):
