@@ -36,8 +36,14 @@ class TurnToTextinatorThread(qtc.QThread):  # tttt for short
         filePath_transcriptList = []
         print("huh?")
         for row in range(len(self.filePathList)):
-            transcript = ttt.TwoForOneSpecial(
+            # conditions for transcribing
+            if self.filePathList[row][2].lower() == "id":
+                # if indonesian, hit it with the two for one special (transcribe as ID, then translate ID to EN)
+                transcript = ttt.TwoForOneSpecial(
                 fileName=self.filePathList[row][1], transcribeLang="id", translateLang="en")
+            elif self.filePathList[row][2].lower() == "en":
+                # if english, only return the transcription
+                transcript = ttt.TranscribeText(fileName=self.filePathList[row][1], transcribeLang="en")
             filePath_transcriptList.append(
                 (self.filePathList[row][0], self.filePathList[row][1], transcript))
         print("hoh?")
@@ -77,6 +83,9 @@ class RecorderThread(qtc.QThread):
         self.is_running = False
         self.toggle_signal.emit(self.fileName)
 
+# please NOT ANOTHER THREAD.
+class AudioPlayerThread(qtc.QThread):
+    pass
 
 class MainMenuWindow(qtw.QWidget):
     def __init__(self):
@@ -325,25 +334,35 @@ class ProcessWindow(qtw.QWidget):
         ttttt = []  # i am funny
         for row in range(self.ui.table_recordData.rowCount()):
             button = self.ui.table_recordData.cellWidget(row, 3)
-            if button.objectName() != "":
+            if button.objectName() != "": # shitty condition to stand-in for "does this object have an audio file path"
                 # i'm about to get even funnier
-                ttttt.append((row, button.objectName()))
+                ttttt.append((row, button.objectName(), self.ui.table_recordData.item(row, 5).text()))
         print("the list contains : {}".format(ttttt))
-        self.tttt = TurnToTextinatorThread()
+        # pass the value over to a TTTThread then let it run.
+        self.tttt = TurnToTextinatorThread() 
         self.tttt.setFilePath(ttttt)
         self.tttt.transcribe_signal.connect(self.GetTranscript)
         self.tttt.start()
+        self.ui.button_back.setDisabled(True) # to prevent unwanted consequences...
 
+    # TranscribeAll's thread will run this after transcription is finished.
     def GetTranscript(self, transcriptResult: list):
-        print("im here?")
+        print("im here now??")
+        print(transcriptResult)
+        # display it, but also update the record_data tables.
         for row in range(len(transcriptResult)):
             self.ui.table_recordData.setItem(
                 transcriptResult[row][0], 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
+            cursor.update_recordData_text(int(self.ui.table_recordData.item(row, 0).text()), str(transcriptResult[row][2])) # at times like this i miss GORM.
+                
+        self.ui.table_recordData.resizeColumnsToContents()
         self.ui.table_recordData.resizeRowsToContents()
+        self.ui.button_back.setDisabled(False) # unfreeze
 
     def TogglePlayRecord(self, filePath):
         sender = self.sender()
         if sender.isChecked():
+            self.audioPlayer.stop() # maybe this will prevent freezing while playing two things at once
             self.audioPlayer.setSource(qtc.QUrl.fromLocalFile(filePath))
             self.audioPlayer.play()
             sender.setText("■")
@@ -458,9 +477,10 @@ class AddWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
     ad = ad.AnomalyDetector(dh=cursor, modelName="")
     menu_widget = MainMenuWindow()
     menu_widget.show()
-    app.exec()
+    app.exec() # the program loops here.
+    cursor.cursor.close() # gentle aftercare after rough use

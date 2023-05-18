@@ -27,7 +27,7 @@ class DatabaseHandler():
                 datetime TEXT NOT NULL
             );
         """)
-        self.cursor.execute("DROP TABLE record_data")
+        # self.cursor.execute("DROP TABLE record_data") # the sacred seal of the nine tails. Do not open
         self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS record_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,7 +117,7 @@ class DatabaseHandler():
     def update_recordData_text(self, ID, text):
         self.cursor.execute("""
                 UPDATE record_data
-                SET text = ?
+                SET transcript_text = ?
                 WHERE id = ?
         """, (text, ID))
         self.cursor.commit()
