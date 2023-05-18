@@ -45,8 +45,18 @@ class AnomalyDetector():
     None, just setting
     '''
 
-    def SetDF(self, dh: db.DatabaseHandler, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
+    def SetDFFromDB(self, dh: db.DatabaseHandler, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
         self.df = self.dh.get_recordDataJoinedDF(selector=selector, ID=eventID)
+        if splitBySentences:
+            # df.set_index('id', inplace=True)
+            self.df['answer'] = self.df['answer'].str.split('.')
+            self.df = self.df.explode("answer", True)
+            self.df.drop(self.df[self.df["answer"] == ""].index, inplace=True)
+            self.df.reset_index(drop=True, inplace=True)
+
+    # ditto above, but takes a pre-made DF instead.
+    def SetDF(self, df:db.pd.DataFrame, splitBySentences:bool=False):
+        self.df = df
         if splitBySentences:
             # df.set_index('id', inplace=True)
             self.df['answer'] = self.df['answer'].str.split('.')
@@ -385,9 +395,9 @@ class AnomalyDetector():
         # extract the dataset
         self.df = self.GetDF()
 
-# ad = AnomalyDetector("database/testdb.db")
+ad = AnomalyDetector("database/testdb.db")
 
-# ad.SetDF(ad.dh, 19, splitBySentences=False)
+ad.SetDFFromDB(ad.dh, 19, splitBySentences=False)
 
 # df_outliers, df_goods = ad.GetAnomalies_DBSCAN_Embedding(isWeighted=True, aggregateMethod="avg", epsilon=0.6, minsamp=2)
 

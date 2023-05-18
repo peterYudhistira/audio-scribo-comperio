@@ -290,35 +290,35 @@ class ProcessWindow(qtw.QWidget):
 
     def LoadTables(self, table, eventID):
         # fetch data
-        dataList = cursor.get_recordDataJoined("event_id", eventID)
+        self.dataList = cursor.get_recordDataJoined("event_id", eventID)
         # clear table first
         table.clearContents()
         table.setRowCount(0)
         # put in table
-        for i in range(len(dataList)):
+        for i in range(len(self.dataList)):
             table.insertRow(i)
             table.setItem(i, 0, qtw.QTableWidgetItem(
-                str(dataList[i][0])))  # id
+                str(self.dataList[i][0])))  # id
             table.setItem(i, 1, qtw.QTableWidgetItem(
-                str(dataList[i][4])))  # question
+                str(self.dataList[i][4])))  # question
             table.setItem(i, 2, qtw.QTableWidgetItem(
-                str(dataList[i][3])))  # speaker
+                str(self.dataList[i][3])))  # speaker
 
             # make audio button. if audio path doesn't exist, disable it.
             self.button_play = qtw.QPushButton("▶".format(i), self)
-            self.button_play.setObjectName(str(dataList[i][5]))
+            self.button_play.setObjectName(str(self.dataList[i][5]))
             self.button_play.setCheckable(True)
             self.button_play.clicked.connect(
                 lambda ch, filePath=self.button_play.objectName(): self.TogglePlayRecord(filePath))
-            if dataList[i][5] == "":
+            if self.dataList[i][5] == "":
                 self.button_play.setDisabled(True)
                 self.button_play.setText("🙅")
             table.setCellWidget(i, 3, self.button_play)
 
             table.setItem(i, 4, qtw.QTableWidgetItem(
-                str(dataList[i][6])))  # text
+                str(self.dataList[i][6])))  # text
             table.setItem(i, 5, qtw.QTableWidgetItem(
-                str(dataList[i][7])))  # language code
+                str(self.dataList[i][7])))  # language code
         # resize
         table.resizeRowsToContents()
         table.horizontalHeader().setSectionResizeMode(
@@ -327,8 +327,14 @@ class ProcessWindow(qtw.QWidget):
             4, qtw.QHeaderView.ResizeMode.Stretch)
 
     def StartProcessing(self, magicNumber):
-        self.ui.table_recordData.setItem(
-            3, 4, qtw.QTableWidgetItem(str("yoohoo")))
+        currentEventID = self.ui.combo_eventList.currentData()
+        print("the current event to be processed is : {}".format(currentEventID))
+
+        ad.SetDFFromDB(ad.dh, eventID=currentEventID, splitBySentences=self.ui.check_isSplit.isChecked())
+        myOutliers, myGoods = ad.GetAnomalies_DBSCAN_Embedding(epsilon=0.6, minsamp=3)
+        print(myOutliers)
+        print(myGoods)
+
 
     def TranscribeAll(self):
         ttttt = []  # i am funny
@@ -483,9 +489,9 @@ class AddWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
-    ad = ad.AnomalyDetector(dh=cursor, modelName="")
+    ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
     menu_widget = MainMenuWindow()
     menu_widget.show()
     app.exec() # the program loops here.
