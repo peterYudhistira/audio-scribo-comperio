@@ -385,7 +385,7 @@ class ProcessWindow(qtw.QWidget):
                 int(transcriptResult[row][0]), 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
             if self.ui.check_saveTranscriptToDatabase.isChecked():
                 print("we are updating the db with : {} || {}".format(self.ui.table_recordData.item(row,0).text(), transcriptResult[row][2]))
-                cursor.update_recordData_text(ID=int(self.ui.table_recordData.item(row, 0).text()), text=str(
+                cursor.update_recordData_text(ID=int(self.ui.table_recordData.item(transcriptResult[row][0], 0).text()), text=str(
                     transcriptResult[row][2]))  # at times like this i miss GORM.
 
         self.ui.table_recordData.resizeRowsToContents()
@@ -575,7 +575,7 @@ if __name__ == "__main__":
     t0 = datetime.utcnow()
     ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
-    # ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
+    ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
     t1 = datetime.utcnow()
     print("duration : {}".format(t1-t0))
     menu_widget = MainMenuWindow()
