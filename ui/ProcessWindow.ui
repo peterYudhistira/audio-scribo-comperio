@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>412</height>
+    <width>1600</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,6 +54,14 @@ QLabel{
 
 QCheckBox{
 	font: 63 12pt &quot;Bahnschrift SemiBold&quot;;
+}
+
+QTableWidget{
+	font: 14pt &quot;Bahnschrift&quot;;
+}
+
+QHeaderView{
+	font: 63 18pt &quot;Bahnschrift SemiBold SemiConden&quot;;
 }</string>
   </property>
   <widget class="QPushButton" name="button_back">
@@ -122,8 +130,8 @@ QCheckBox{
     <rect>
      <x>500</x>
      <y>10</y>
-     <width>671</width>
-     <height>391</height>
+     <width>1121</width>
+     <height>661</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -149,7 +157,7 @@ QCheckBox{
    </column>
    <column>
     <property name="text">
-     <string>Audio Transcript</string>
+     <string>Audio</string>
     </property>
    </column>
    <column>
@@ -242,6 +250,9 @@ QCheckBox{
    </property>
   </widget>
   <widget class="QCheckBox" name="check_nerdMode">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>40</x>

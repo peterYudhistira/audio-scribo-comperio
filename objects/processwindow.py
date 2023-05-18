@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1200, 412)
+        Form.resize(1600, 700)
         Form.setStyleSheet("QLabel#label_title, #label_subtitle{ \n"
 "    \n"
 "    font: 63 28pt \"Bahnschrift SemiBold SemiConden\";\n"
@@ -53,6 +53,14 @@ class Ui_Form(object):
 "\n"
 "QCheckBox{\n"
 "    font: 63 12pt \"Bahnschrift SemiBold\";\n"
+"}\n"
+"\n"
+"QTableWidget{\n"
+"    font: 14pt \"Bahnschrift\";\n"
+"}\n"
+"\n"
+"QHeaderView{\n"
+"    font: 63 18pt \"Bahnschrift SemiBold SemiConden\";\n"
 "}")
         self.button_back = QtWidgets.QPushButton(parent=Form)
         self.button_back.setGeometry(QtCore.QRect(40, 20, 101, 51))
@@ -80,7 +88,12 @@ class Ui_Form(object):
         self.line_2.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line_2.setObjectName("line_2")
         self.table_recordData = QtWidgets.QTableWidget(parent=Form)
-        self.table_recordData.setGeometry(QtCore.QRect(500, 10, 671, 391))
+        self.table_recordData.setGeometry(QtCore.QRect(500, 10, 1121, 661))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.table_recordData.sizePolicy().hasHeightForWidth())
+        self.table_recordData.setSizePolicy(sizePolicy)
         self.table_recordData.setObjectName("table_recordData")
         self.table_recordData.setColumnCount(6)
         self.table_recordData.setRowCount(0)
@@ -117,6 +130,7 @@ class Ui_Form(object):
         self.check_saveResult.setGeometry(QtCore.QRect(40, 270, 181, 21))
         self.check_saveResult.setObjectName("check_saveResult")
         self.check_nerdMode = QtWidgets.QCheckBox(parent=Form)
+        self.check_nerdMode.setEnabled(False)
         self.check_nerdMode.setGeometry(QtCore.QRect(40, 300, 181, 21))
         self.check_nerdMode.setObjectName("check_nerdMode")
         self.button_transcribe_all = QtWidgets.QPushButton(parent=Form)
@@ -152,7 +166,7 @@ class Ui_Form(object):
         item = self.table_recordData.horizontalHeaderItem(2)
         item.setText(_translate("Form", "Speaker"))
         item = self.table_recordData.horizontalHeaderItem(3)
-        item.setText(_translate("Form", "Audio Transcript"))
+        item.setText(_translate("Form", "Audio"))
         item = self.table_recordData.horizontalHeaderItem(4)
         item.setText(_translate("Form", "Text Transcript"))
         item = self.table_recordData.horizontalHeaderItem(5)

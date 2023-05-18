@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'AddWindow.ui'
+# Form implementation generated from reading ui file 'ui/AddWindow.ui'
 #
 # Created by: PyQt6 UI code generator 6.5.0
 #
@@ -46,7 +46,13 @@ class Ui_Form(object):
 "    \n"
 "    font: 63 12pt \"Bahnschrift SemiBold\";\n"
 "}\n"
-"")
+"QTableWidget{\n"
+"    font: 14pt \"Bahnschrift\";\n"
+"}\n"
+"\n"
+"QHeaderView{\n"
+"    font: 63 18pt \"Bahnschrift SemiBold SemiConden\";\n"
+"}")
         self.button_toggle_widget = QtWidgets.QPushButton(parent=Form)
         self.button_toggle_widget.setEnabled(True)
         self.button_toggle_widget.setGeometry(QtCore.QRect(320, 10, 221, 49))

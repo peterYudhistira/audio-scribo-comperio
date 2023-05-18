@@ -316,6 +316,7 @@ class AnomalyDetector():
     inputs :
     - clusters : list<int> --> a list of clusters assigned to each doc/sentence
     - df : DataFrame --> the dataframe in question
+    - isReturnSeparate : bool --> split return or not. Defaults to split (for some reason...)
     '''
     '''
     outputs:
@@ -323,13 +324,16 @@ class AnomalyDetector():
     - dfGoods : DataFrame --> the dataframe whose answers have not been marked as outliers.
     '''
 
-    def ReturnClusters(self, clusters: list, df: db.pd.DataFrame):
+    def ReturnClusters(self, clusters: list, df: db.pd.DataFrame, isReturnSeparate:bool=True):
         df["Cluster Assignment"] = clusters
-        dfGoods = df.loc[df["Cluster Assignment"] != -1]
-        dfOutliers = df.loc[df["Cluster Assignment"] == -1]
-        return dfOutliers, dfGoods
+        if isReturnSeparate:
+            dfGoods = df.loc[df["Cluster Assignment"] != -1]
+            dfOutliers = df.loc[df["Cluster Assignment"] == -1]
+            return dfOutliers, dfGoods
+        else:
+            return df
 
-    def GetAnomalies_DBSCAN_Embedding(self, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon: float = 0.01, minsamp: int = 2):
+    def GetAnomalies_DBSCAN_Embedding(self, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon: float = 0.01, minsamp: int = 2, isReturnSeparate:bool=True):
         # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
 
         # preprocess each doc/sentence
@@ -360,9 +364,9 @@ class AnomalyDetector():
             list(self.df["Document Embed"]), epsilon, minsamp)
 
         # return the dfs
-        return self.ReturnClusters(self.clusters, self.df)
+        return self.ReturnClusters(self.clusters, self.df, isReturnSeparate=isReturnSeparate)
 
-    def GetAnomalies_DBSCAN_LDA(self, isWeighted: bool = True, topics: int = 5, epsilon: float = 0.01, minsamp: int = 5):
+    def GetAnomalies_DBSCAN_LDA(self, isWeighted: bool = True, topics: int = 5, epsilon: float = 0.01, minsamp: int = 5, isReturnSeparate:bool=True):
         # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
 
         # preprocess each doc/sentence
@@ -388,16 +392,16 @@ class AnomalyDetector():
             list(self.df["Document Embed"]), epsilon, minsamp)
 
         # return the dfs
-        return self.ReturnClusters(self.clusters, self.df)
+        return self.ReturnClusters(self.clusters, self.df, isReturnSeparate=isReturnSeparate)
 
     def GetAnomalies(self, method: str, model, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon=0.01, minsamp=2, topics=5):
         # initialize
         # extract the dataset
         self.df = self.GetDF()
 
-ad = AnomalyDetector("database/testdb.db")
+# ad = AnomalyDetector("database/testdb.db")
 
-ad.SetDFFromDB(ad.dh, 19, splitBySentences=False)
+# ad.SetDFFromDB(ad.dh, 19, splitBySentences=False)
 
 # df_outliers, df_goods = ad.GetAnomalies_DBSCAN_Embedding(isWeighted=True, aggregateMethod="avg", epsilon=0.6, minsamp=2)
 

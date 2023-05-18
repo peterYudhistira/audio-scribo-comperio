@@ -47,7 +47,13 @@ QLabel{
 	
 	font: 63 12pt &quot;Bahnschrift SemiBold&quot;;
 }
-</string>
+QTableWidget{
+	font: 14pt &quot;Bahnschrift&quot;;
+}
+
+QHeaderView{
+	font: 63 18pt &quot;Bahnschrift SemiBold SemiConden&quot;;
+}</string>
   </property>
   <widget class="QPushButton" name="button_toggle_widget">
    <property name="enabled">

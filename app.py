@@ -1,9 +1,12 @@
 import typing
+from datetime import datetime
+from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
     listenwindow as lw,
     processwindow as pw,
     addwindow as aw,
+    presentwindow as prw,
     turntotexinator as ttt,
     anomalydetector as ad,
     db
@@ -38,10 +41,11 @@ class TurnToTextinatorThread(qtc.QThread):  # tttt for short
             if self.filePathList[row][2].lower() == "id":
                 # if indonesian, hit it with the two for one special (transcribe as ID, then translate ID to EN)
                 transcript = ttt.TwoForOneSpecial(
-                fileName=self.filePathList[row][1], transcribeLang="id", translateLang="en")
+                    fileName=self.filePathList[row][1], transcribeLang="id", translateLang="en")
             elif self.filePathList[row][2].lower() == "en":
                 # if english, only return the transcription
-                transcript = ttt.TranscribeText(fileName=self.filePathList[row][1], transcribeLang="en")
+                transcript = ttt.TranscribeText(
+                    fileName=self.filePathList[row][1], transcribeLang="en")
             filePath_transcriptList.append(
                 (self.filePathList[row][0], self.filePathList[row][1], transcript))
         print("hoh?")
@@ -82,8 +86,11 @@ class RecorderThread(qtc.QThread):
         self.toggle_signal.emit(self.fileName)
 
 # please NOT ANOTHER THREAD.
+
+
 class AudioPlayerThread(qtc.QThread):
     pass
+
 
 class MainMenuWindow(qtw.QWidget):
     def __init__(self):
@@ -257,12 +264,14 @@ class ProcessWindow(qtw.QWidget):
         self.audioOutput = qtm.QAudioOutput()
         self.audioPlayer.setAudioOutput(self.audioOutput)
         self.audioOutput.setVolume(100)
+        self.presentWindow = None  # Funni little workaround
         # whosoever has power over the machine, let him discover!
         self.setWindowTitle("qui habet potentia super machina, comperiat!")
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         self.LoadComboBox(self.ui.combo_eventList)
         self.ui.check_saveTranscriptToDatabase.setChecked(True)
-        self.ui.check_saveTranscriptToDatabase.setDisabled(True) # we disable this for now.
+        # we disable this for now.
+        self.ui.check_saveTranscriptToDatabase.setDisabled(True)
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
@@ -320,36 +329,51 @@ class ProcessWindow(qtw.QWidget):
             table.setItem(i, 5, qtw.QTableWidgetItem(
                 str(self.dataList[i][7])))  # language code
         # resize
-        table.resizeRowsToContents()
         table.horizontalHeader().setSectionResizeMode(
             1, qtw.QHeaderView.ResizeMode.Stretch)
         table.horizontalHeader().setSectionResizeMode(
             4, qtw.QHeaderView.ResizeMode.Stretch)
+        # do this AFTER stretching.
+        self.ui.table_recordData.resizeRowsToContents()
 
     def StartProcessing(self, magicNumber):
         currentEventID = self.ui.combo_eventList.currentData()
-        print("the current event to be processed is : {}".format(currentEventID))
-
-        ad.SetDFFromDB(ad.dh, eventID=currentEventID, splitBySentences=self.ui.check_isSplit.isChecked())
-        myOutliers, myGoods = ad.GetAnomalies_DBSCAN_Embedding(epsilon=0.6, minsamp=3)
-        print(myOutliers)
-        print(myGoods)
-
+        ad.SetDFFromDB(ad.dh, eventID=currentEventID,
+                       splitBySentences=self.ui.check_isSplit.isChecked())
+        # myOutliers, myGoods = ad.GetAnomalies_DBSCAN_Embedding(
+        #     epsilon=0.6, minsamp=3)
+        # print(myOutliers)
+        # print(myGoods)
+        # i'll implement nerd mode tonight... today.
+        if self.ui.check_nerdMode.isChecked():
+            pass
+        else:
+            # myResult = ad.GetAnomalies_DBSCAN_LDA(
+            #     epsilon=0.4, minsamp=2, isReturnSeparate=False)
+            myResult = ad.GetAnomalies_DBSCAN_Embedding(
+                epsilon=0.6, minsamp=3, isReturnSeparate=False)
+            self.presentWindow = PresentWindow(
+                myResult, self.ui.label_theme.text(), self)
+            self.presentWindow.show()
 
     def TranscribeAll(self):
         ttttt = []  # i am funny
         for row in range(self.ui.table_recordData.rowCount()):
             button = self.ui.table_recordData.cellWidget(row, 3)
-            if button.objectName() != "": # shitty condition to stand-in for "does this object have an audio file path"
+            if button.objectName() != "":  # shitty condition to stand-in for "does this object have an audio file path"
                 # i'm about to get even funnier
-                ttttt.append((row, button.objectName(), self.ui.table_recordData.item(row, 5).text()))
+                ttttt.append((row, button.objectName(),
+                             self.ui.table_recordData.item(row, 5).text()))
         print("the list contains : {}".format(ttttt))
         # pass the value over to a TTTThread then let it run.
-        self.tttt = TurnToTextinatorThread() 
+        self.tttt = TurnToTextinatorThread()
         self.tttt.setFilePath(ttttt)
         self.tttt.transcribe_signal.connect(self.GetTranscript)
         self.tttt.start()
-        self.ui.button_back.setDisabled(True) # to prevent unwanted consequences...
+        # to prevent unwanted consequences...
+        self.ui.button_back.setDisabled(True)
+        self.ui.button_process.setDisabled(True)
+        self.ui.button_transcribe_all.setDisabled(True)
 
     # TranscribeAll's thread will run this after transcription is finished.
     def GetTranscript(self, transcriptResult: list):
@@ -358,29 +382,36 @@ class ProcessWindow(qtw.QWidget):
         # display it and write to DB and/or CSV if needed.
         for row in range(len(transcriptResult)):
             self.ui.table_recordData.setItem(
-                transcriptResult[row][0], 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
+                int(transcriptResult[row][0]), 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
             if self.ui.check_saveTranscriptToDatabase.isChecked():
-                cursor.update_recordData_text(int(self.ui.table_recordData.item(row, 0).text()), str(transcriptResult[row][2])) # at times like this i miss GORM.
-            
+                print("we are updating the db with : {} || {}".format(self.ui.table_recordData.item(row,0).text(), transcriptResult[row][2]))
+                cursor.update_recordData_text(ID=int(self.ui.table_recordData.item(row, 0).text()), text=str(
+                    transcriptResult[row][2]))  # at times like this i miss GORM.
 
-                
         self.ui.table_recordData.resizeRowsToContents()
         self.ui.table_recordData.horizontalHeader().setSectionResizeMode(
             1, qtw.QHeaderView.ResizeMode.Stretch)
         self.ui.table_recordData.horizontalHeader().setSectionResizeMode(
             4, qtw.QHeaderView.ResizeMode.Stretch)
-        self.ui.button_back.setDisabled(False) # unfreeze
+        self.ui.button_back.setDisabled(False)  # unfreeze
+        self.ui.button_process.setDisabled(False)
+        self.ui.button_transcribe_all.setDisabled(False)
 
     def TogglePlayRecord(self, filePath):
         sender = self.sender()
         if sender.isChecked():
-            self.audioPlayer.stop() # maybe this will prevent freezing while playing two things at once
+            # maybe this will prevent freezing while playing two things at once
+            self.audioPlayer.stop()
             self.audioPlayer.setSource(qtc.QUrl.fromLocalFile(filePath))
             self.audioPlayer.play()
             sender.setText("■")
         else:
             self.audioPlayer.stop()
             sender.setText("▶")
+
+    def closeEvent(self, event):
+        if self.presentWindow:
+            self.presentWindow.close()
 
 
 class AddWindow(qtw.QWidget):
@@ -486,13 +517,68 @@ class AddWindow(qtw.QWidget):
             self.MessageFail("Speaker not created")
 
 
+class PresentWindow(qtw.QWidget):
+    def __init__(self, df: db.pd.DataFrame, eventTitle: str, processWindow: ProcessWindow) -> None:
+        super().__init__()
+        # the processwindow here
+        self.processWindow = processWindow
+
+        # set stuff here
+        self.ui = prw.Ui_Form()
+        self.ui.setupUi(self)
+        self.df = df
+        self.ui.label_title.setText(eventTitle)
+        # connect stuff here
+        self.LoadTable(self.df)
+        self.ui.button_saveInFile.clicked.connect(self.SaveInFile)
+
+    # functions
+    def SaveInFile(self):
+        print("haha, jonathan, you are banging my daughter")
+
+    def LoadTable(self, df: db.pd.DataFrame):
+        self.ui.tableWidget.verticalScrollBar().setSingleStep(1)
+        self.ui.tableWidget.setRowCount(0)
+        for i in range(len(self.df.index)):
+            self.ui.tableWidget.insertRow(i)
+            self.ui.tableWidget.setItem(
+                i, 0, qtw.QTableWidgetItem(str(self.df.loc[i]["id"])))
+            self.ui.tableWidget.setItem(
+                i, 1, qtw.QTableWidgetItem(str(self.df.loc[i]["speaker"])))
+            self.ui.tableWidget.setItem(
+                i, 2, qtw.QTableWidgetItem(str(self.df.loc[i]["question"])))
+            self.ui.tableWidget.setItem(
+                i, 3, qtw.QTableWidgetItem(str(self.df.loc[i]["answer"])))
+            # if outlier, color red
+            if self.df.loc[i]["Cluster Assignment"] == -1:
+                for j in range(self.ui.tableWidget.columnCount()):
+                    self.ui.tableWidget.item(i, j).setBackground(
+                        qtg.QColor(232, 52, 39, 255))
+        # resize
+        self.ui.tableWidget.horizontalHeader().setSectionResizeMode(
+            3, qtw.QHeaderView.ResizeMode.Stretch)
+        self.ui.tableWidget.horizontalHeader().setSectionResizeMode(
+            2, qtw.QHeaderView.ResizeMode.Stretch)
+        self.ui.tableWidget.resizeRowsToContents()  # do this AFTER stretching.
+        # do this AFTER stretching.
+        self.ui.tableWidget.resizeColumnsToContents()
+        # unfuck the scrollbar
+        self.ui.tableWidget.setVerticalScrollMode(
+            qtw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.ui.tableWidget.verticalScrollBar().setSingleStep(5)
+        # self.ui.tableWidget()
+
+
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    t0 = datetime.utcnow()
+    ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
-    ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
+    # ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
+    t1 = datetime.utcnow()
+    print("duration : {}".format(t1-t0))
     menu_widget = MainMenuWindow()
     menu_widget.show()
-    app.exec() # the program loops here.
-    cursor.cursor.close() # gentle aftercare after rough use
+    app.exec()  # the program loops here.
+    cursor.cursor.close()  # gentle aftercare after rough use
