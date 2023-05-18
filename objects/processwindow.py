@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1600, 700)
+        Form.resize(1600, 707)
         Form.setStyleSheet("QLabel#label_title, #label_subtitle{ \n"
 "    \n"
 "    font: 63 28pt \"Bahnschrift SemiBold SemiConden\";\n"
@@ -61,6 +61,14 @@ class Ui_Form(object):
 "\n"
 "QHeaderView{\n"
 "    font: 63 18pt \"Bahnschrift SemiBold SemiConden\";\n"
+"}\n"
+"\n"
+"QLabel#label_NerdMode{\n"
+"    font: 63 20pt \"Bahnschrift SemiBold\";\n"
+"}\n"
+"\n"
+"QRadioButton{\n"
+"    font: 63 12pt \"Bahnschrift SemiBold\";\n"
 "}")
         self.button_back = QtWidgets.QPushButton(parent=Form)
         self.button_back.setGeometry(QtCore.QRect(40, 20, 101, 51))
@@ -83,7 +91,7 @@ class Ui_Form(object):
         self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line.setObjectName("line")
         self.line_2 = QtWidgets.QFrame(parent=Form)
-        self.line_2.setGeometry(QtCore.QRect(480, 10, 20, 391))
+        self.line_2.setGeometry(QtCore.QRect(480, 10, 20, 661))
         self.line_2.setFrameShape(QtWidgets.QFrame.Shape.VLine)
         self.line_2.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line_2.setObjectName("line_2")
@@ -130,7 +138,7 @@ class Ui_Form(object):
         self.check_saveResult.setGeometry(QtCore.QRect(40, 270, 181, 21))
         self.check_saveResult.setObjectName("check_saveResult")
         self.check_nerdMode = QtWidgets.QCheckBox(parent=Form)
-        self.check_nerdMode.setEnabled(False)
+        self.check_nerdMode.setEnabled(True)
         self.check_nerdMode.setGeometry(QtCore.QRect(40, 300, 181, 21))
         self.check_nerdMode.setObjectName("check_nerdMode")
         self.button_transcribe_all = QtWidgets.QPushButton(parent=Form)
@@ -150,6 +158,71 @@ class Ui_Form(object):
         self.check_saveTranscriptToDatabase = QtWidgets.QCheckBox(parent=Form)
         self.check_saveTranscriptToDatabase.setGeometry(QtCore.QRect(280, 270, 191, 21))
         self.check_saveTranscriptToDatabase.setObjectName("check_saveTranscriptToDatabase")
+        self.label_NerdMode = QtWidgets.QLabel(parent=Form)
+        self.label_NerdMode.setGeometry(QtCore.QRect(50, 410, 431, 41))
+        self.label_NerdMode.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.label_NerdMode.setObjectName("label_NerdMode")
+        self.line_4 = QtWidgets.QFrame(parent=Form)
+        self.line_4.setGeometry(QtCore.QRect(37, 440, 441, 20))
+        self.line_4.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        self.line_4.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.line_4.setObjectName("line_4")
+        self.label_FeatureExtraction = QtWidgets.QLabel(parent=Form)
+        self.label_FeatureExtraction.setGeometry(QtCore.QRect(40, 460, 141, 21))
+        self.label_FeatureExtraction.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.label_FeatureExtraction.setObjectName("label_FeatureExtraction")
+        self.label_Method = QtWidgets.QLabel(parent=Form)
+        self.label_Method.setGeometry(QtCore.QRect(50, 570, 131, 21))
+        self.label_Method.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.label_Method.setObjectName("label_Method")
+        self.check_isWeighted = QtWidgets.QCheckBox(parent=Form)
+        self.check_isWeighted.setGeometry(QtCore.QRect(40, 530, 131, 21))
+        self.check_isWeighted.setObjectName("check_isWeighted")
+        self.line_nTopics = QtWidgets.QLineEdit(parent=Form)
+        self.line_nTopics.setGeometry(QtCore.QRect(320, 460, 41, 20))
+        self.line_nTopics.setObjectName("line_nTopics")
+        self.line_epsilon = QtWidgets.QLineEdit(parent=Form)
+        self.line_epsilon.setGeometry(QtCore.QRect(340, 580, 41, 20))
+        self.line_epsilon.setObjectName("line_epsilon")
+        self.line_minSamp = QtWidgets.QLineEdit(parent=Form)
+        self.line_minSamp.setGeometry(QtCore.QRect(410, 580, 41, 20))
+        self.line_minSamp.setObjectName("line_minSamp")
+        self.label = QtWidgets.QLabel(parent=Form)
+        self.label.setGeometry(QtCore.QRect(370, 460, 81, 21))
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(parent=Form)
+        self.label_2.setGeometry(QtCore.QRect(390, 580, 21, 21))
+        self.label_2.setObjectName("label_2")
+        self.label_3 = QtWidgets.QLabel(parent=Form)
+        self.label_3.setGeometry(QtCore.QRect(460, 580, 31, 21))
+        self.label_3.setObjectName("label_3")
+        self.verticalLayoutWidget = QtWidgets.QWidget(parent=Form)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(200, 450, 121, 80))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.radio_Embed = QtWidgets.QRadioButton(parent=self.verticalLayoutWidget)
+        self.radio_Embed.setObjectName("radio_Embed")
+        self.verticalLayout_2.addWidget(self.radio_Embed)
+        self.radio_LDA = QtWidgets.QRadioButton(parent=self.verticalLayoutWidget)
+        self.radio_LDA.setObjectName("radio_LDA")
+        self.verticalLayout_2.addWidget(self.radio_LDA)
+        self.verticalLayoutWidget_2 = QtWidgets.QWidget(parent=Form)
+        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(200, 570, 141, 83))
+        self.verticalLayoutWidget_2.setObjectName("verticalLayoutWidget_2")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.radio_DBSCAN = QtWidgets.QRadioButton(parent=self.verticalLayoutWidget_2)
+        self.radio_DBSCAN.setObjectName("radio_DBSCAN")
+        self.verticalLayout_4.addWidget(self.radio_DBSCAN)
+        self.radio_LOF = QtWidgets.QRadioButton(parent=self.verticalLayoutWidget_2)
+        self.radio_LOF.setObjectName("radio_LOF")
+        self.verticalLayout_4.addWidget(self.radio_LOF)
+        self.radio_IF = QtWidgets.QRadioButton(parent=self.verticalLayoutWidget_2)
+        self.radio_IF.setObjectName("radio_IF")
+        self.verticalLayout_4.addWidget(self.radio_IF)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -180,6 +253,18 @@ class Ui_Form(object):
         self.button_transcribe_all.setText(_translate("Form", "Transcribe"))
         self.check_saveTranscriptToCSV.setText(_translate("Form", "Save Transcript to CSV"))
         self.check_saveTranscriptToDatabase.setText(_translate("Form", "Save Transcript to DB"))
+        self.label_NerdMode.setText(_translate("Form", "Nerd Corner 🤓"))
+        self.label_FeatureExtraction.setText(_translate("Form", "Feature Extraction"))
+        self.label_Method.setText(_translate("Form", "Method"))
+        self.check_isWeighted.setText(_translate("Form", "Weighted"))
+        self.label.setText(_translate("Form", "n_topics"))
+        self.label_2.setText(_translate("Form", "ε"))
+        self.label_3.setText(_translate("Form", "min"))
+        self.radio_Embed.setText(_translate("Form", "Embedding"))
+        self.radio_LDA.setText(_translate("Form", "LDA"))
+        self.radio_DBSCAN.setText(_translate("Form", "DBSCAN"))
+        self.radio_LOF.setText(_translate("Form", "LOF"))
+        self.radio_IF.setText(_translate("Form", "Isolation Forest"))
 
 
 if __name__ == "__main__":

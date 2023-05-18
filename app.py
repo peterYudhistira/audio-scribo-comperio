@@ -272,6 +272,14 @@ class ProcessWindow(qtw.QWidget):
         self.ui.check_saveTranscriptToDatabase.setChecked(True)
         # we disable this for now.
         self.ui.check_saveTranscriptToDatabase.setDisabled(True)
+        self.ui.check_nerdMode.setChecked(True)
+        self.ui.featureExtractionGroup = qtw.QButtonGroup(self)
+        self.ui.featureExtractionGroup.addButton(self.ui.radio_Embed)
+        self.ui.featureExtractionGroup.addButton(self.ui.radio_LDA)
+        self.ui.anomalyDetectionGroup = qtw.QButtonGroup(self)
+        self.ui.anomalyDetectionGroup.addButton(self.ui.radio_DBSCAN)
+        self.ui.anomalyDetectionGroup.addButton(self.ui.radio_LOF)
+        self.ui.anomalyDetectionGroup.addButton(self.ui.radio_IF)
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
@@ -280,6 +288,7 @@ class ProcessWindow(qtw.QWidget):
         self.ui.button_process.clicked.connect(
             lambda: self.StartProcessing(15))
         self.ui.button_transcribe_all.clicked.connect(self.TranscribeAll)
+        self.ui.check_nerdMode.toggled.connect(self.ToggleNerdMode)
 
     def GoBack(self):
         self.hide()
@@ -336,20 +345,50 @@ class ProcessWindow(qtw.QWidget):
         # do this AFTER stretching.
         self.ui.table_recordData.resizeRowsToContents()
 
+    # toggle the params. I will surely regret this later.
+    def ToggleNerdMode(self):
+        sender = self.sender()
+        if sender.isChecked():
+            self.ui.radio_Embed.setDisabled(False)
+            self.ui.radio_LDA.setDisabled(False)
+            self.ui.radio_DBSCAN.setDisabled(False)
+            self.ui.radio_LOF.setDisabled(False)
+            self.ui.radio_IF.setDisabled(False)
+            self.ui.check_isWeighted.setDisabled(False)
+            self.ui.line_epsilon.setDisabled(False)
+            self.ui.line_minSamp.setDisabled(False)
+            self.ui.line_nTopics.setDisabled(False)
+        else:
+            self.ui.radio_Embed.setDisabled(True)
+            self.ui.radio_LDA.setDisabled(True)
+            self.ui.radio_DBSCAN.setDisabled(True)
+            self.ui.radio_LOF.setDisabled(True)
+            self.ui.radio_IF.setDisabled(True)
+            self.ui.check_isWeighted.setDisabled(True)
+            self.ui.line_epsilon.setDisabled(True)
+            self.ui.line_minSamp.setDisabled(True)
+            self.ui.line_nTopics.setDisabled(True)
+
     def StartProcessing(self, magicNumber):
-        currentEventID = self.ui.combo_eventList.currentData()
-        ad.SetDFFromDB(ad.dh, eventID=currentEventID,
-                       splitBySentences=self.ui.check_isSplit.isChecked())
-        # myOutliers, myGoods = ad.GetAnomalies_DBSCAN_Embedding(
-        #     epsilon=0.6, minsamp=3)
-        # print(myOutliers)
-        # print(myGoods)
+        # currentEventID = self.ui.combo_eventList.currentData()
+        # ad.SetDFFromDB(ad.dh, eventID=currentEventID,
+        #                splitBySentences=self.ui.check_isSplit.isChecked())
         # i'll implement nerd mode tonight... today.
         if self.ui.check_nerdMode.isChecked():
-            pass
+            isWeighted = self.ui.check_isWeighted.isChecked()
+            featureExtractor = self.ui.featureExtractionGroup.checkedButton().text()
+            anomalyDetector = self.ui.anomalyDetectionGroup.checkedButton().text()
+            epsilon = float(self.ui.line_epsilon.text())
+            minSamp = int(self.ui.line_minSamp.text())
+            LDAnTopic = int(self.ui.line_nTopics.text())
+            if anomalyDetector == "DBSCAN":
+                if featureExtractor == "LDA":
+                    myResult = ad.GetAnomalies_DBSCAN_LDA(
+                        isWeighted=isWeighted, topics=LDAnTopic, epsilon=epsilon, minsamp=minSamp, isReturnSeparate=False)
+                else:
+                    myResult = ad.GetAnomalies_DBSCAN_Embedding(
+                        isWeighted=isWeighted, epsilon=epsilon, minsamp=minSamp, isReturnSeparate=False)
         else:
-            # myResult = ad.GetAnomalies_DBSCAN_LDA(
-            #     epsilon=0.4, minsamp=2, isReturnSeparate=False)
             myResult = ad.GetAnomalies_DBSCAN_Embedding(
                 epsilon=0.6, minsamp=3, isReturnSeparate=False)
             self.presentWindow = PresentWindow(
@@ -384,7 +423,8 @@ class ProcessWindow(qtw.QWidget):
             self.ui.table_recordData.setItem(
                 int(transcriptResult[row][0]), 4, qtw.QTableWidgetItem(transcriptResult[row][2]))
             if self.ui.check_saveTranscriptToDatabase.isChecked():
-                print("we are updating the db with : {} || {}".format(self.ui.table_recordData.item(row,0).text(), transcriptResult[row][2]))
+                print("we are updating the db with : {} || {}".format(
+                    self.ui.table_recordData.item(row, 0).text(), transcriptResult[row][2]))
                 cursor.update_recordData_text(ID=int(self.ui.table_recordData.item(transcriptResult[row][0], 0).text()), text=str(
                     transcriptResult[row][2]))  # at times like this i miss GORM.
 
@@ -573,7 +613,7 @@ if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
     t0 = datetime.utcnow()
-    ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE
     ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
     t1 = datetime.utcnow()
