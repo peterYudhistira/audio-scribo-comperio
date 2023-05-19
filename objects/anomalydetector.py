@@ -331,6 +331,7 @@ class AnomalyDetector():
             dfOutliers = df.loc[df["Cluster Assignment"] == -1]
             return dfOutliers, dfGoods
         else:
+            df.reset_index(inplace=True)
             return df
 
     def GetAnomalies_DBSCAN_Embedding(self, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon: float = 0.01, minsamp: int = 2, isReturnSeparate:bool=True):

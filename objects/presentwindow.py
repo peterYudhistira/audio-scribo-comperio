@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1206, 778)
+        Form.resize(1210, 800)
         Form.setStyleSheet("QLabel#label_title, #label_subtitle{ \n"
 "    \n"
 "    font: 63 28pt \"Bahnschrift SemiBold SemiConden\";\n"
@@ -66,7 +66,7 @@ class Ui_Form(object):
         self.button_saveInFile.setGeometry(QtCore.QRect(1010, 720, 191, 41))
         self.button_saveInFile.setObjectName("button_saveInFile")
         self.label_title = QtWidgets.QLabel(parent=Form)
-        self.label_title.setGeometry(QtCore.QRect(21, 11, 1151, 45))
+        self.label_title.setGeometry(QtCore.QRect(21, 11, 1200, 45))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

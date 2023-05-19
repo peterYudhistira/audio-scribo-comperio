@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1600, 707)
+        Form.resize(1636, 707)
         Form.setStyleSheet("QLabel#label_title, #label_subtitle{ \n"
 "    \n"
 "    font: 63 28pt \"Bahnschrift SemiBold SemiConden\";\n"
@@ -179,7 +179,7 @@ class Ui_Form(object):
         self.check_isWeighted.setGeometry(QtCore.QRect(40, 530, 131, 21))
         self.check_isWeighted.setObjectName("check_isWeighted")
         self.line_nTopics = QtWidgets.QLineEdit(parent=Form)
-        self.line_nTopics.setGeometry(QtCore.QRect(320, 460, 41, 20))
+        self.line_nTopics.setGeometry(QtCore.QRect(320, 500, 41, 20))
         self.line_nTopics.setObjectName("line_nTopics")
         self.line_epsilon = QtWidgets.QLineEdit(parent=Form)
         self.line_epsilon.setGeometry(QtCore.QRect(340, 580, 41, 20))
@@ -188,7 +188,7 @@ class Ui_Form(object):
         self.line_minSamp.setGeometry(QtCore.QRect(410, 580, 41, 20))
         self.line_minSamp.setObjectName("line_minSamp")
         self.label = QtWidgets.QLabel(parent=Form)
-        self.label.setGeometry(QtCore.QRect(370, 460, 81, 21))
+        self.label.setGeometry(QtCore.QRect(370, 500, 81, 21))
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(parent=Form)
         self.label_2.setGeometry(QtCore.QRect(390, 580, 21, 21))

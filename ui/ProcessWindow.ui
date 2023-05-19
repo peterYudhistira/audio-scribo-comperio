@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1600</width>
+    <width>1636</width>
     <height>707</height>
    </rect>
   </property>
@@ -402,7 +402,7 @@ QRadioButton{
    <property name="geometry">
     <rect>
      <x>320</x>
-     <y>460</y>
+     <y>500</y>
      <width>41</width>
      <height>20</height>
     </rect>
@@ -432,7 +432,7 @@ QRadioButton{
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>460</y>
+     <y>500</y>
      <width>81</width>
      <height>21</height>
     </rect>
