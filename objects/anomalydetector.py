@@ -16,7 +16,9 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import DBSCAN
-from sklearn.manifold import TSNE
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.decomposition import PCA
 
 # this is where everything we've experimented on will be implemented.
 
@@ -33,6 +35,9 @@ class AnomalyDetector():
         else:
             self.model = model
 
+        self.FeatureExtractionParams = {}
+        self.AnomalyDetectionParams = {}
+
     '''
     inputs :
     - dh : DatabaseHandler --> to retrieve data from database
@@ -45,7 +50,7 @@ class AnomalyDetector():
     None, just setting
     '''
 
-    def SetDFFromDB(self, dh: db.DatabaseHandler, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
+    def SetDFFromDB(self, eventID: int, selector: str = "event_id", splitBySentences: bool = False):
         self.df = self.dh.get_recordDataJoinedDF(selector=selector, ID=eventID)
         if splitBySentences:
             # df.set_index('id', inplace=True)
@@ -55,7 +60,7 @@ class AnomalyDetector():
             self.df.reset_index(drop=True, inplace=True)
 
     # ditto above, but takes a pre-made DF instead.
-    def SetDF(self, df:db.pd.DataFrame, splitBySentences:bool=False):
+    def SetDF(self, df: db.pd.DataFrame, splitBySentences: bool = False):
         self.df = df
         if splitBySentences:
             # df.set_index('id', inplace=True)
@@ -64,8 +69,15 @@ class AnomalyDetector():
             self.df.drop(self.df[self.df["answer"] == ""].index, inplace=True)
             self.df.reset_index(drop=True, inplace=True)
 
-    def SetModel(self, modelName:str="glove-wiki-gigaword-300"):
+    def SetModel(self, modelName: str = "glove-wiki-gigaword-300"):
         self.model = api.load(modelName)
+
+    # these are to add key:value to the dictionaries that dictate parameters. Indeed, we are refurbishing.
+    def SetFeatureExtractionParam(self, key: str, value):
+        self.FeatureExtractionParams[key] = value
+
+    def SetAnomalyDetectionParam(self, key: str, value):
+        self.AnomalyDetectionParams[key] = value
 
     '''
     inputs :
@@ -311,6 +323,24 @@ class AnomalyDetector():
         # plt.show()
         # print(clusters)
         return clusters
+    '''
+    inputs:
+    - vectors : list<list<float>> --> list of features corresponding to each doc/sentence
+
+    '''
+
+    def GetIFResults(self, vector):
+        isolationForest = IsolationForest(n_estimators=500, contamination=0.1)
+        isolationForest.fit(vector)
+        IFResults = isolationForest.decision_function(vector)
+
+        # minus values yield anomalies.
+        for i in range(len(IFResults)):
+            if IFResults[i] >= 0:
+                IFResults[i] = 0
+            else:
+                IFResults[i] = -1
+        return IFResults
 
     '''
     inputs :
@@ -324,87 +354,167 @@ class AnomalyDetector():
     - dfGoods : DataFrame --> the dataframe whose answers have not been marked as outliers.
     '''
 
-    def ReturnClusters(self, clusters: list, df: db.pd.DataFrame, isReturnSeparate:bool=True):
-        df["Cluster Assignment"] = clusters
+    def ReturnClusters(self, isReturnSeparate: bool = True):
         if isReturnSeparate:
-            dfGoods = df.loc[df["Cluster Assignment"] != -1]
-            dfOutliers = df.loc[df["Cluster Assignment"] == -1]
+            dfGoods = self.df.loc[self.df["Cluster Assignment"] != -1]
+            dfOutliers = self.df.loc[self.df["Cluster Assignment"] == -1]
             return dfOutliers, dfGoods
         else:
-            df.reset_index(inplace=True)
-            return df
+            if self.df.isnull().values.any():
+                self.df.reset_index(inplace=True)
+            return self.df
 
-    def GetAnomalies_DBSCAN_Embedding(self, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon: float = 0.01, minsamp: int = 2, isReturnSeparate:bool=True):
-        # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
+    '''
+    inputs:
+    - method : str --> LDA or Embedding.
+    - isWeighted : bool --> use weights or not
+    - nTopics : int --> for LDA.
+    '''
+    '''
+    - outputs : none. This is an internal function
+    '''
+    def GetAnomalies(self, isReturnSeparate: bool = False):
+        self.SetDocumentTokens()  # set tokens in the DF
+        if self.FeatureExtractionParams["method"] == "embedding":
+            self.SetEmbeddingResult()
+        elif self.FeatureExtractionParams["method"] == "LDA":
+            self.SetLDAResult()
 
-        # preprocess each doc/sentence
-        self.preprocessedDocs = [self.PreprocessDocument(
-            doc, isLemma=True, isStopWords=True) for doc in self.df["answer"]]
+        if self.AnomalyDetectionParams["algorithm"] == "DBSCAN":
+            self.SetDBSCANClusters(list(self.df["Document Embed"]))
+        elif self.AnomalyDetectionParams["algorithm"] == "LOF":
+            self.SetLOFClusters(list(self.df["Document Embed"]))
+        elif self.AnomalyDetectionParams["algorithm"] == "IF":
+            self.SetIFClusters(list(self.df["Document Embed"]))
 
+        return self.ReturnClusters(isReturnSeparate=isReturnSeparate)
+
+    '''
+    inputs  : None (checks self.FeatureExtractionParams)
+    desc    : embeds each doc and put it in a new column "Document Embed"
+    '''
+
+    def SetEmbeddingResult(self):
         # extract feature with embedding
         self.wordEmbeddedDocs = [self.WordEmbed(
             doc, self.model) for doc in self.preprocessedDocs]
 
-        # if weighted, prepare TF-IDF and embed sentences with weight.
-        if isWeighted:
+        if "weighted" in self.FeatureExtractionParams:
             self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
                 self.preprocessedDocs)
             self.doc_embeds = self.SentenceEmbedWeighted(
-                self.wordEmbeddedDocs, self.tfidf_df, aggregateMethod)
+                self.wordEmbeddedDocs, self.tfidf_df, self.FeatureExtractionParams["aggregate_method"])
         else:
             self.doc_embeds = self.SentenceEmbedUnweighted(
-                self.wordEmbeddedDocs, aggregateMethod)
+                self.wordEmbeddedDocs, self.FeatureExtractionParams["aggregate_method"])
 
-        # append embedding to each document
-        if self.doc_embeds:
-            self.df["Document Embed"] = self.doc_embeds
-            self.df = self.df.dropna(subset=["Document Embed"]) # preventing NaN in the simplest fucking way in know.
+        self.df["Document Embed"] = self.doc_embeds
 
-        # apply DBSCAN
-        self.clusters = self.GetDBSCANClusters(
-            list(self.df["Document Embed"]), epsilon, minsamp)
+    def SetDefaultParams(self):
+        # here we will put the default params
+        self.SetFeatureExtractionParam("method", "embedding")
+        self.SetFeatureExtractionParam("weighted", True)
+        self.SetFeatureExtractionParam("condense", False)
+        self.SetFeatureExtractionParam("n_topics", 5)
+        self.SetFeatureExtractionParam("aggregate_method", "avg")
+        self.SetAnomalyDetectionParam("algorithm", "DBSCAN")
+        self.SetAnomalyDetectionParam("epsilon", 1.0)
+        self.SetAnomalyDetectionParam("minsamp", 2)
+        self.SetAnomalyDetectionParam("epsilon", 1.0)
+        self.SetAnomalyDetectionParam("algorithm", "IF")
+        self.SetAnomalyDetectionParam("estimators", 500)
+        self.SetAnomalyDetectionParam("contamination", 0.1)
+        self.SetAnomalyDetectionParam("neighbors", 5)
 
-        # return the dfs
-        return self.ReturnClusters(self.clusters, self.df, isReturnSeparate=isReturnSeparate)
-
-    def GetAnomalies_DBSCAN_LDA(self, isWeighted: bool = True, topics: int = 5, epsilon: float = 0.01, minsamp: int = 5, isReturnSeparate:bool=True):
-        # df and model are obtained by invoking a separate function, and it is assumed to be already available when invoking this function.
-
-        # preprocess each doc/sentence
+    # preprocess each doc/sentence
+    def SetDocumentTokens(self):
         self.preprocessedDocs = [self.PreprocessDocument(
             doc, isLemma=True, isStopWords=True) for doc in self.df["answer"]]
+        self.df["Tokenized"] = self.preprocessedDocs
 
-        # if weighted, prepare tf-idf matrix.
-        if isWeighted:
+        # if cut off data with less than x values
+        if "prune" in self.FeatureExtractionParams:
+            mask = self.df['Embedded Docs'].apply(
+                lambda x: len(x) > self.FeatureExtractionParams["prune"])
+            self.df = self.df[mask]
+
+    '''
+    inputs  : None (checks self.FeatureExtractionParams)
+    desc    : assigns topic distribution for each document.
+    '''
+
+    def SetLDAResult(self):
+        doclist = list(self.df["Tokenized"])
+        new_corpus = []
+        if self.FeatureExtractionParams["weighted"]:
             self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
                 self.preprocessedDocs)
+            for i in range(len(doclist)):
+                doc = [(j, self.tfidf_matrix[i, j])
+                       for j in self.tfidf_matrix[i].indices]
+                new_corpus.append(doc)
+                gensim_dict = corpora.Dictionary.from_corpus(new_corpus)
+        else:
+            gensim_dict = corpora.Dictionary(doclist)
+            new_corpus = [gensim_dict.doc2bow(doc) for doc in doclist]
 
-        # use the in-house options for weighted or not.
-        self.doc_embeds = self.GetLDADistribution(
-            self.preprocessedDocs, topics=topics, use_tfidf=isWeighted)
+        lda_model = gensim.models.LdaModel(
+            new_corpus, num_topics=self.FeatureExtractionParams["n_topics"], id2word=gensim_dict)
+        goofy_ahh_doc_topic_distributions = lda_model[new_corpus]
 
-        # append embedding to each document
-        if self.doc_embeds:
-            self.df["Document Embed"] = self.doc_embeds
-            self.df = self.df.dropna(subset=["Document Embed"]) # preventing NaN in the simplest fucking way in know.
+        docFeatureList = []
+        for doc_topic_dist in goofy_ahh_doc_topic_distributions:
+            featureList = [0.0 for i in range(
+                0, self.FeatureExtractionParams["n_topics"])]
+            for topic_dist in doc_topic_dist:
+                featureList[topic_dist[0]] = topic_dist[1]
+            docFeatureList.append(featureList)
 
-        # apply DBSCAN
-        self.clusters = self.GetDBSCANClusters(
-            list(self.df["Document Embed"]), epsilon, minsamp)
+        self.df["Document Embed"] = docFeatureList
 
-        # return the dfs
-        return self.ReturnClusters(self.clusters, self.df, isReturnSeparate=isReturnSeparate)
+    '''
+    inputs  :
+    - vectors : list<list<float>> --> list of features corresponding to each doc/sentence
+    desc    : assigns cluster via DBSCAN. 
+    '''
 
-    def GetAnomalies(self, method: str, model, isWeighted: bool = True, aggregateMethod: str = "avg", epsilon=0.01, minsamp=2, topics=5):
-        # initialize
-        # extract the dataset
-        self.df = self.GetDF()
+    def SetDBSCANClusters(self, vectors):
+        dbscan = DBSCAN(
+            eps=self.AnomalyDetectionParams["epsilon"], min_samples=self.AnomalyDetectionParams["minsamp"])
+        clusters = dbscan.fit_predict(vectors)
+        self.df["Cluster Assignment"] = clusters
 
-# ad = AnomalyDetector("database/testdb.db")
+    '''
+    inputs:
+    - vectors : list<list<float>> --> list of features corresponding to each doc/sentence
 
-# ad.SetDFFromDB(ad.dh, 19, splitBySentences=False)
+    '''
 
-# df_outliers, df_goods = ad.GetAnomalies_DBSCAN_Embedding(isWeighted=True, aggregateMethod="avg", epsilon=0.6, minsamp=2)
+    def SetIFClusters(self, vector):
+        isolationForest = IsolationForest(
+            n_estimators=self.AnomalyDetectionParams["estimators"], contamination=self.AnomalyDetectionParams["contamination"])
+        isolationForest.fit(vector)
+        IFResults = isolationForest.decision_function(vector)
 
-# print(df_outliers)
-# print(df_goods)
+        # minus values yield anomalies.
+        for i in range(len(IFResults)):
+            if IFResults[i] >= 0:
+                IFResults[i] = 0
+            else:
+                IFResults[i] = -1
+        self.df["Cluster Assignment"] = IFResults
+
+    '''
+    inputs : vectors : list<list<float>> --> list of features for each doc/sentence
+    '''
+
+    def SetLOFClusters(self, vector):
+        lof = LocalOutlierFactor(
+            n_neighbors=self.AnomalyDetectionParams["neighbors"], contamination=self.AnomalyDetectionParams["contamination"])
+        lof.fit(vector)
+        LOFResults = lof.negative_outlier_factor_
+
+        # minus values yield anomalies
+        LOFResults[LOFResults >= 0] = 0
+        LOFResults[LOFResults < 0] = -1
+        self.df["Cluster Assignment"] = LOFResults

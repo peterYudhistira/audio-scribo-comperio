@@ -401,7 +401,7 @@ QRadioButton{
   <widget class="QLineEdit" name="line_nTopics">
    <property name="geometry">
     <rect>
-     <x>320</x>
+     <x>300</x>
      <y>500</y>
      <width>41</width>
      <height>20</height>
@@ -411,8 +411,8 @@ QRadioButton{
   <widget class="QLineEdit" name="line_epsilon">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>580</y>
+     <x>300</x>
+     <y>570</y>
      <width>41</width>
      <height>20</height>
     </rect>
@@ -421,8 +421,8 @@ QRadioButton{
   <widget class="QLineEdit" name="line_minSamp">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>580</y>
+     <x>370</x>
+     <y>570</y>
      <width>41</width>
      <height>20</height>
     </rect>
@@ -431,7 +431,7 @@ QRadioButton{
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>350</x>
      <y>500</y>
      <width>81</width>
      <height>21</height>
@@ -444,8 +444,8 @@ QRadioButton{
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>390</x>
-     <y>580</y>
+     <x>350</x>
+     <y>570</y>
      <width>21</width>
      <height>21</height>
     </rect>
@@ -457,20 +457,20 @@ QRadioButton{
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>460</x>
-     <y>580</y>
-     <width>31</width>
+     <x>420</x>
+     <y>570</y>
+     <width>71</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>min</string>
+    <string>minsamp</string>
    </property>
   </widget>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>200</x>
+     <x>180</x>
      <y>450</y>
      <width>121</width>
      <height>80</height>
@@ -496,7 +496,7 @@ QRadioButton{
   <widget class="QWidget" name="verticalLayoutWidget_2">
    <property name="geometry">
     <rect>
-     <x>200</x>
+     <x>180</x>
      <y>570</y>
      <width>141</width>
      <height>83</height>
@@ -520,11 +520,80 @@ QRadioButton{
     <item>
      <widget class="QRadioButton" name="radio_IF">
       <property name="text">
-       <string>Isolation Forest</string>
+       <string>IF</string>
       </property>
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QLineEdit" name="line_neighbors">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>600</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="line_estimators">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>630</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>600</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>n</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>630</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>est</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="line_contamination">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>610</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>610</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>contam</string>
+   </property>
   </widget>
  </widget>
  <resources/>

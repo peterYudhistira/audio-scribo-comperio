@@ -1,5 +1,6 @@
 import typing
 from datetime import datetime
+from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
@@ -86,12 +87,6 @@ class RecorderThread(qtc.QThread):
         self.toggle_signal.emit(self.fileName)
 
 # please NOT ANOTHER THREAD.
-
-
-class AudioPlayerThread(qtc.QThread):
-    pass
-
-
 class MainMenuWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
@@ -288,6 +283,7 @@ class ProcessWindow(qtw.QWidget):
         self.msgBox = qtw.QMessageBox()
         self.msgBox.setStandardButtons(qtw.QMessageBox.StandardButton.Ok)
         self.msgBox.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
+        self.buttonPlayList = []
 
         # connect stuff here
         self.ui.button_back.clicked.connect(self.GoBack)
@@ -339,6 +335,7 @@ class ProcessWindow(qtw.QWidget):
             if self.dataList[i][5] == "":
                 self.button_play.setDisabled(True)
                 self.button_play.setText("🙅")
+            self.buttonPlayList.append(self.button_play)
             table.setCellWidget(i, 3, self.button_play)
 
             table.setItem(i, 4, qtw.QTableWidgetItem(
@@ -383,33 +380,53 @@ class ProcessWindow(qtw.QWidget):
 
     def StartProcessing(self):
         currentEventID = self.ui.combo_eventList.currentData()
-        ad.SetDFFromDB(ad.dh, eventID=currentEventID,
+        ad.SetDFFromDB(eventID=currentEventID,
                         splitBySentences=self.ui.check_isSplit.isChecked())
         # i'll implement nerd mode tonight... today.
         nerdOK = True
         if self.ui.check_nerdMode.isChecked():
             if self.ValidateNerdModeParams():
-                isWeighted = self.ui.check_isWeighted.isChecked()
                 featureExtractor = self.ui.featureExtractionGroup.checkedButton().text()
+                ad.SetFeatureExtractionParam("method", featureExtractor)
+
                 anomalyDetector = self.ui.anomalyDetectionGroup.checkedButton().text()
-                epsilon = float(self.ui.line_epsilon.text())
-                minSamp = int(self.ui.line_minSamp.text())
-                if anomalyDetector == "DBSCAN":
-                    if featureExtractor == "LDA":
-                        print("we entering LDA territory my boy")
-                        LDAnTopic = int(self.ui.line_nTopics.text())
-                        myResult = ad.GetAnomalies_DBSCAN_LDA(
-                            isWeighted=isWeighted, topics=LDAnTopic, epsilon=epsilon, minsamp=minSamp, isReturnSeparate=False)
-                    else:
-                        print("we enter embedding territory my boy")
-                        myResult = ad.GetAnomalies_DBSCAN_Embedding(
-                            isWeighted=isWeighted, epsilon=epsilon, minsamp=minSamp, isReturnSeparate=False)          
+                ad.SetAnomalyDetectionParam("algorithm", anomalyDetector)
+
+                isWeighted = self.ui.check_isWeighted.isChecked()
+                ad.SetFeatureExtractionParam("weighted", isWeighted)
+                
+                if self.ui.line_epsilon.text() != '':
+                    epsilon = float(self.ui.line_epsilon.text())
+                    ad.SetAnomalyDetectionParam("epsilon", epsilon)
+
+                if self.ui.line_minSamp.text() != '':
+                    minSamp = int(self.ui.line_minSamp.text())
+                    ad.SetAnomalyDetectionParam("minsamp", minSamp)
+
+                if self.ui.line_neighbors.text() != '':
+                    nNeighbors = int(self.ui.line_neighbors.text())
+                    ad.SetAnomalyDetectionParam("neighbors", nNeighbors)
+
+                if self.ui.line_contamination.text() != '':
+                    contaminationRate = float(self.ui.line_contamination.text())
+                    ad.SetAnomalyDetectionParam("contamination", contaminationRate)
+
+                if self.ui.line_estimators.text() != '':
+                    nEstimators = int(self.ui.line_estimators.text())
+                    ad.SetAnomalyDetectionParam("estimators", nEstimators)
+
+                if self.ui.line_nTopics.text() != '':
+                    LDAnTopic = int(self.ui.line_nTopics.text())
+                    ad.SetFeatureExtractionParam("n_topics", LDAnTopic)
+                print(ad.FeatureExtractionParams)
+                print(ad.AnomalyDetectionParams)
+                myResult = ad.GetAnomalies(isReturnSeparate=False)
             else:
                 nerdOK = False
         else:
-            # this is going to be the "default option"
-            myResult = ad.GetAnomalies_DBSCAN_Embedding(
-                epsilon=0.6, minsamp=3, isReturnSeparate=False)
+            print(ad.FeatureExtractionParams)
+            print(ad.AnomalyDetectionParams)
+            myResult = ad.GetAnomalies(isReturnSeparate=False)
         if nerdOK:
             self.presentWindow = PresentWindow(
                 myResult, self.ui.label_theme.text(), self)
@@ -434,7 +451,15 @@ class ProcessWindow(qtw.QWidget):
                         self.MessageFail("You doing DBSCAN without the epsilon and/or minsamp")
                         return False
                 # in the case of LOF
+                elif self.ui.anomalyDetectionGroup.checkedButton().text() == "LOF":
+                    if not(self.ui.line_contamination.text() and self.ui.line_neighbors.text()):
+                        self.MessageFail("You doing LOF without the contamination and/or n_neighbors")
+                        return False
                 # in the case of IF
+                elif self.ui.anomalyDetectionGroup.checkedButton().text() == "IF":
+                    if not(self.ui.line_contamination.text() and self.ui.line_estimators.text()):
+                        self.MessageFail("You doing IF without the contamination and/or n_estimators") 
+                        return False
         return True
     
     def MessageFail(self, txt):
@@ -487,8 +512,6 @@ class ProcessWindow(qtw.QWidget):
     def TogglePlayRecord(self, filePath):
         sender = self.sender()
         if sender.isChecked():
-            # maybe this will prevent freezing while playing two things at once
-            self.audioPlayer.stop()
             self.audioPlayer.setSource(qtc.QUrl.fromLocalFile(filePath))
             self.audioPlayer.play()
             sender.setText("■")
@@ -662,9 +685,10 @@ if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
     t0 = datetime.utcnow()
-    ttt = ttt.TurnToTextinator()  # you think i'm funny?
-    # please PLEASE don't make me have to use multithreading again PLEASE
-    ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
+    # ttt = ttt.TurnToTextinator()  # you think i'm funny?
+    # please PLEASE don't make me have to use multithreading again PLEASE glove-wiki-gigaword-300
+    ad = ad.AnomalyDetector(dh=cursor, modelName="")
+    ad.SetDefaultParams()
     t1 = datetime.utcnow()
     print("duration : {}".format(t1-t0))
     menu_widget = MainMenuWindow()
