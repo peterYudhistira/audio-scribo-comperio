@@ -278,8 +278,8 @@ class ProcessWindow(qtw.QWidget):
         self.ui.anomalyDetectionGroup.addButton(self.ui.radio_LOF)
         self.ui.anomalyDetectionGroup.addButton(self.ui.radio_IF)
         # for now, disable LOF and IF
-        self.ui.radio_LOF.setDisabled(True)
-        self.ui.radio_IF.setDisabled(True)
+        # self.ui.radio_LOF.setDisabled(True)
+        # self.ui.radio_IF.setDisabled(True)
         self.msgBox = qtw.QMessageBox()
         self.msgBox.setStandardButtons(qtw.QMessageBox.StandardButton.Ok)
         self.msgBox.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
@@ -687,7 +687,7 @@ if __name__ == "__main__":
     t0 = datetime.utcnow()
     # ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE glove-wiki-gigaword-300
-    ad = ad.AnomalyDetector(dh=cursor, modelName="")
+    ad = ad.AnomalyDetector(dh=cursor, modelName="text8")
     ad.SetDefaultParams()
     t1 = datetime.utcnow()
     print("duration : {}".format(t1-t0))

@@ -375,7 +375,7 @@ class AnomalyDetector():
     '''
     def GetAnomalies(self, isReturnSeparate: bool = False):
         self.SetDocumentTokens()  # set tokens in the DF
-        if self.FeatureExtractionParams["method"] == "embedding":
+        if self.FeatureExtractionParams["method"] == "Embedding":
             self.SetEmbeddingResult()
         elif self.FeatureExtractionParams["method"] == "LDA":
             self.SetLDAResult()
