@@ -22,13 +22,3 @@ class TurnToTextinator():
     def TwoForOneSpecial(self, fileName, transcribeLang="id", translateLang="en"):
         text = self.TranscribeText(fileName, transcribeLang)
         return self.TranslateText(text, transcribeLang, translateLang)
-    
-    def SaySomething(self):
-        print("a platypus? PERRY THE PLATYPUS???")
-        
-# ttt = TurnToTextinator()
-# text = ttt.TranscribeText("records\event18\YOT11052023020940.wav", transcribeLang="Indonesian")
-# tlText = ttt.TranslateText(text, "id", "en")
-# print(text)
-# print("-" * 80)
-# print(tlText)

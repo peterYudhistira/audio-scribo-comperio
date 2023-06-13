@@ -1,7 +1,3 @@
-import typing
-from datetime import datetime
-from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QWidget
 from objects import (
     mainmenu as mm,
     listenwindow as lw,
@@ -13,7 +9,6 @@ from objects import (
     db
 )
 from PyQt6 import (
-    QtCore,
     QtWidgets as qtw,
     QtCore as qtc,
     QtGui as qtg,
@@ -98,7 +93,6 @@ class MainMenuWindow(qtw.QWidget):
         self.setWindowIcon(qtg.QIcon("asset/images/Solaire.png"))
         # thanks to Rueful on Discord for grammatical correction.
         self.ui.label_title.setText("Audio, Scribo, Comperio")
-        # self.ui.label_icon.setPixmap(qtg.QPixmap("asset/images/Solaire.png"))
 
         # connect stuff here
         self.ui.button_listen.clicked.connect(self.button_startListening)
@@ -354,6 +348,11 @@ class ProcessWindow(qtw.QWidget):
         self.ui.button_process.setDisabled(False)
         self.ui.button_transcribe_all.setDisabled(False)
 
+        # fix the scrollbar
+        self.ui.table_recordData.setVerticalScrollMode(
+            qtw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.ui.table_recordData.verticalScrollBar().setSingleStep(5)
+
     # toggle the params. I will surely regret this later.
     def ToggleNerdMode(self):
         sender = self.sender()
@@ -471,7 +470,7 @@ class ProcessWindow(qtw.QWidget):
         ttttt = []  # i am funny
         for row in range(self.ui.table_recordData.rowCount()):
             button = self.ui.table_recordData.cellWidget(row, 3)
-            if button.objectName() != "":  # shitty condition to stand-in for "does this object have an audio file path"
+            if button.objectName() != "":  # goofy condition to stand-in for "does this object have an audio file path"
                 # i'm about to get even funnier
                 ttttt.append((row, button.objectName(),
                              self.ui.table_recordData.item(row, 5).text()))
@@ -646,7 +645,7 @@ class PresentWindow(qtw.QWidget):
 
     # functions
     def SaveInFile(self):
-        print("haha, jonathan, you are banging my daughter")
+        print("saving to file.")
 
     def LoadTable(self, df: db.pd.DataFrame):
         self.ui.tableWidget.verticalScrollBar().setSingleStep(1)
@@ -674,7 +673,7 @@ class PresentWindow(qtw.QWidget):
         self.ui.tableWidget.resizeRowsToContents()  # do this AFTER stretching.
         # do this AFTER stretching.
         self.ui.tableWidget.resizeColumnsToContents()
-        # unfuck the scrollbar
+        # fix the scrollbar
         self.ui.tableWidget.setVerticalScrollMode(
             qtw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.ui.tableWidget.verticalScrollBar().setSingleStep(5)
@@ -684,14 +683,11 @@ class PresentWindow(qtw.QWidget):
 if __name__ == "__main__":
     cursor = db.DatabaseHandler("database/testdb.db")
     app = qtw.QApplication([])
-    t0 = datetime.utcnow()
     # ttt = ttt.TurnToTextinator()  # you think i'm funny?
     # please PLEASE don't make me have to use multithreading again PLEASE glove-wiki-gigaword-300
-    ad = ad.AnomalyDetector(dh=cursor, modelName="text8")
+    ad = ad.AnomalyDetector(dh=cursor, modelName="glove-wiki-gigaword-300")
     ad.SetDefaultParams()
-    t1 = datetime.utcnow()
-    print("duration : {}".format(t1-t0))
-    menu_widget = MainMenuWindow()
+    menu_widget = MainMenuWindow()  
     menu_widget.show()
     app.exec()  # the program loops here.
     cursor.cursor.close()  # gentle aftercare after rough use

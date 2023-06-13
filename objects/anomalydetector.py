@@ -6,7 +6,6 @@ import inflect
 import string
 import nltk
 import gensim
-import contractions
 import matplotlib.pyplot as plt
 import gensim.downloader as api
 from gensim import corpora, models
@@ -213,8 +212,52 @@ class AnomalyDetector():
                 word_embed_pairs.append((word, model[word]))
         return word_embed_pairs
 
+    '''
+    inputs :
+    - model         :           -->word2vec model
+    - document      : list<str> --> a list of word tokens to embed.
+    - maxLength     : int       --> the maximum length, to pad the vector with if necessary.
+    - weighted      : bool      --> multiply each word with respective TF-IDF score or not.
+    '''
+
+    def TinyWordEmbed(self, document: list, model, maxLength: int):
+        features = []
+        # this creates a feature length of len(document)
+        for word in document:
+            if word in model:
+                features.append(np.mean(model[word], axis=0))
+        # if less than maxLength, pad with zeros.
+        if len(features) < maxLength:
+            padLength = maxLength - len(features)
+            padding = np.zeros(padLength)
+            features = np.concatenate((features, padding))
+
+        # i remain pessimistic that this would work.
+        return features
+
+    # ditto TinyWordEmbed but with weight
+    def TinyWordEmbedWeighted(self, document: list, model, maxLength: int, index: int):
+        features = []
+        for word in document:
+            if word in model:
+                weight = 0
+                if word in self.tfidf_df:
+                    weight = self.tfidf_df[word][index]
+                features.append(
+                    np.mean(model[word], axis=0) * weight)
+
+        # if less than maxLength, pad with zeros.
+        if len(features) < maxLength:
+            padLength = maxLength - len(features)
+            padding = np.zeros(padLength)
+            features = np.concatenate((features, padding))
+
+        # i remain pessimistic that this would work.
+        return features
+
     # input : list<(str, list<float>[300])>, str : word-vector pair list and preferred agg method.
     # output : list<float>[300] : 300-d vector that represents an aggregated value of the input words
+
     def SentenceEmbedUnweightedFunction(self, word_embed_pair_list: list, aggregateMethod: str = "avg"):
         wvs = []
         for pair in word_embed_pair_list:
@@ -357,7 +400,9 @@ class AnomalyDetector():
     def ReturnClusters(self, isReturnSeparate: bool = True):
         if isReturnSeparate:
             dfGoods = self.df.loc[self.df["Cluster Assignment"] != -1]
+            dfGoods.reset_index(inplace=True)
             dfOutliers = self.df.loc[self.df["Cluster Assignment"] == -1]
+            dfOutliers.reset_index(inplace=True)
             return dfOutliers, dfGoods
         else:
             if self.df.isnull().values.any():
@@ -373,12 +418,15 @@ class AnomalyDetector():
     '''
     - outputs : none. This is an internal function
     '''
+
     def GetAnomalies(self, isReturnSeparate: bool = False):
         self.SetDocumentTokens()  # set tokens in the DF
         if self.FeatureExtractionParams["method"] == "Embedding":
             self.SetEmbeddingResult()
         elif self.FeatureExtractionParams["method"] == "LDA":
             self.SetLDAResult()
+        elif self.FeatureExtractionParams["method"] == "Tiny":
+            self.SetTinyEmbeddingResult()
 
         if self.AnomalyDetectionParams["algorithm"] == "DBSCAN":
             self.SetDBSCANClusters(list(self.df["Document Embed"]))
@@ -399,7 +447,7 @@ class AnomalyDetector():
         self.wordEmbeddedDocs = [self.WordEmbed(
             doc, self.model) for doc in self.preprocessedDocs]
 
-        if "weighted" in self.FeatureExtractionParams:
+        if "weighted" in self.FeatureExtractionParams and self.FeatureExtractionParams["weighted"]:
             self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
                 self.preprocessedDocs)
             self.doc_embeds = self.SentenceEmbedWeighted(
@@ -410,9 +458,23 @@ class AnomalyDetector():
 
         self.df["Document Embed"] = self.doc_embeds
 
+    def SetTinyEmbeddingResult(self):
+        # get max length
+        maxdoc = max(self.preprocessedDocs, key=len)
+        maxlen = len(maxdoc)
+        # extract feature of each word with embedding
+        self.doc_embeds = [self.TinyWordEmbed(
+            doc, self.model, maxlen) for doc in self.preprocessedDocs]
+        if "weighted" in self.FeatureExtractionParams and self.FeatureExtractionParams["weighted"]:
+            self.tfidf_df, self.tfidf_matrix = self.GetTFIDF(
+                self.preprocessedDocs)
+            self.doc_embeds = [self.TinyWordEmbedWeighted(
+                doc, self.model, maxlen, i) for i, doc in enumerate(self.preprocessedDocs)]
+        self.df["Document Embed"] = self.doc_embeds
+
     def SetDefaultParams(self):
         # here we will put the default params
-        self.SetFeatureExtractionParam("method", "embedding")
+        self.SetFeatureExtractionParam("method", "Embedding")
         self.SetFeatureExtractionParam("weighted", True)
         self.SetFeatureExtractionParam("condense", False)
         self.SetFeatureExtractionParam("n_topics", 5)
@@ -515,6 +577,17 @@ class AnomalyDetector():
         LOFResults = lof.negative_outlier_factor_
 
         # minus values yield anomalies
-        LOFResults[LOFResults >= 0] = 0
-        LOFResults[LOFResults < 0] = -1
+        if "lof_generalize" in self.AnomalyDetectionParams and self.AnomalyDetectionParams["lof_generalize"]:
+            print("if minus we go bald")
+            LOFResults[LOFResults >= 0] = 0
+            LOFResults[LOFResults < 0] = -1
+        else:
+            # if not generalize, we assume outliers are within the n-th percentile, with n = contamination rate.
+            print(
+                "taking the {}-th percentile".f
+                ormat(self.AnomalyDetectionParams["contamination"] * 100))
+            threshold = np.percentile(
+                LOFResults, 100 * self.AnomalyDetectionParams["contamination"])
+            LOFResults[LOFResults >= threshold] = 0
+            LOFResults[LOFResults < threshold] = -1
         self.df["Cluster Assignment"] = LOFResults
